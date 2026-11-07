@@ -1,1 +1,3001 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NEON LIFE - Life Simulator</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+ --bg:#090e19;
+ --panel:#111a2b;
+ --panel2:#1a263b;
+ --border:#293951;
+ --text:#f0f5ff;
+ --muted:#8796ad;
+ --cyan:#36d9ff;
+ --green:#50e2a0;
+ --gold:#ffc65c;
+ --red:#ff647d;
+ --purple:#b18aff;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+ background:var(--bg);
+ color:var(--text);
+ font-family:Inter,Arial,sans-serif;
+ min-height:100vh;
+}
+button{font:inherit;cursor:pointer}
+button:disabled{opacity:.35;cursor:not-allowed}
+.app{max-width:1250px;margin:auto;padding:15px 15px 100px}
+
+header{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:12px;flex-wrap:wrap;
+ margin-bottom:18px;
+}
+.logo{font-weight:900;font-size:21px;letter-spacing:1px}
+.logo span{color:var(--cyan)}
+.sub{font-size:10px;color:var(--muted);margin-top:5px}
+.header-info{display:flex;gap:8px;align-items:center}
+.pill{
+ padding:9px 12px;background:var(--panel);
+ border:1px solid var(--border);border-radius:10px;
+ font-size:11px;font-weight:800;
+}
+.stats{
+ display:grid;grid-template-columns:repeat(4,1fr);
+ gap:10px;margin-bottom:15px;
+}
+.stat{
+ background:var(--panel);border:1px solid var(--border);
+ border-radius:13px;padding:13px;min-width:0;
+}
+.stat-label{font-size:10px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:clamp(14px,2.5vw,21px);font-weight:900;overflow-wrap:anywhere}
+.stat-sub{font-size:10px;color:var(--green);margin-top:6px}
+
+.layout{
+ display:grid;
+ grid-template-columns:minmax(0,1.55fr) minmax(270px,.75fr);
+ gap:15px;
+}
+.panel{
+ background:var(--panel);
+ border:1px solid var(--border);
+ border-radius:15px;
+ padding:15px;
+ margin-bottom:14px;
+}
+.panel-title{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:8px;
+ margin-bottom:14px;font-size:14px;font-weight:800;
+}
+.muted{font-size:10px;color:var(--muted)}
+.section{display:none}
+.section.active{display:block}
+
+.tabs{
+ display:flex;gap:7px;overflow-x:auto;
+ margin-bottom:13px;padding-bottom:3px;
+}
+.tab{
+ white-space:nowrap;padding:10px 13px;
+ background:var(--panel2);border:1px solid var(--border);
+ color:var(--muted);border-radius:9px;
+ font-size:10px;font-weight:800;
+}
+.tab.active{color:var(--cyan);border-color:var(--cyan);background:#16344a}
+
+.action{
+ border:0;border-radius:9px;padding:11px;
+ background:linear-gradient(100deg,#168fc0,#3478ed);
+ color:white;font-size:11px;font-weight:800;
+ width:100%;margin-top:9px;
+}
+.action.green{background:linear-gradient(100deg,#138866,#35c68e)}
+.action.gold{background:linear-gradient(100deg,#b78327,#efbd51);color:#201706}
+.action.red{background:#592b3b;color:#ffc0cb}
+.action.gray{background:#293951;color:#e2edff}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+
+.card{
+ background:var(--panel2);border:1px solid var(--border);
+ padding:12px;border-radius:12px;min-width:0;
+}
+.card-icon{font-size:27px;margin-bottom:8px}
+.card-name{font-size:12px;font-weight:800}
+.card-desc{font-size:10px;color:var(--muted);line-height:1.6;margin-top:5px}
+.card-price{font-size:12px;color:var(--green);font-weight:800;margin-top:9px}
+
+.bar{
+ height:7px;background:#293951;
+ border-radius:10px;overflow:hidden;margin-top:7px;
+}
+.bar div{height:100%;border-radius:10px;transition:width .3s}
+.cyan{background:var(--cyan)}
+.green{background:var(--green)}
+.goldbar{background:var(--gold)}
+.redbar{background:var(--red)}
+.purplebar{background:var(--purple)}
+
+.status-row{
+ display:flex;align-items:center;gap:10px;
+ margin:12px 0;
+}
+.status-row .name{width:78px;font-size:10px;color:var(--muted)}
+.status-row .bar{flex:1;margin:0}
+.status-row .number{width:32px;text-align:right;font-size:10px}
+
+.world{
+ border:1px solid var(--border);
+ border-radius:12px;overflow:hidden;
+ background:#10263b;
+}
+#worldCanvas{width:100%;display:block}
+.world-footer{
+ padding:11px;display:flex;justify-content:space-between;
+ gap:8px;font-size:10px;color:var(--muted);
+}
+.location-grid{
+ display:grid;grid-template-columns:repeat(2,1fr);gap:9px;
+}
+.location{
+ border:1px solid var(--border);
+ background:var(--panel2);border-radius:11px;
+ padding:12px;text-align:left;color:var(--text);
+}
+.location.selected{border-color:var(--cyan);background:#15334b}
+.location .emoji{font-size:25px}
+.location .locname{font-size:11px;font-weight:800;margin-top:8px}
+.location .locdesc{font-size:9px;color:var(--muted);margin-top:4px}
+
+.list-item{
+ display:flex;align-items:center;gap:10px;
+ padding:12px 0;border-bottom:1px solid var(--border);
+}
+.list-item:last-child{border:0}
+.list-icon{font-size:25px}
+.list-info{flex:1;min-width:0}
+.list-name{font-size:11px;font-weight:800}
+.list-desc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5}
+.mini-btn{
+ border:0;border-radius:8px;background:#174b48;
+ color:#8ff3d1;padding:9px 10px;font-size:10px;font-weight:800;
+ white-space:nowrap;
+}
+.mini-btn.blue{background:#183b60;color:#9bd8ff}
+.mini-btn.gold{background:#59451f;color:#ffdb91}
+
+.log{font-size:10px;line-height:2.2;color:var(--muted);max-height:170px;overflow:auto}
+.log div{border-bottom:1px solid #26334a}
+
+.nav{
+ position:fixed;bottom:0;left:0;right:0;
+ display:flex;justify-content:center;gap:3px;
+ background:#0c1423ee;backdrop-filter:blur(15px);
+ border-top:1px solid var(--border);padding:8px 3px;
+ z-index:10;
+}
+.nav button{
+ border:0;background:transparent;color:var(--muted);
+ min-width:58px;padding:7px 8px;border-radius:9px;
+ font-size:9px;font-weight:800;
+}
+.nav button span{display:block;font-size:19px;margin-bottom:4px}
+.nav button.active{background:#17334a;color:var(--cyan)}
+
+.toast{
+ position:fixed;top:15px;left:50%;transform:translateX(-50%);
+ z-index:50;display:none;background:#183c3a;
+ border:1px solid var(--green);color:#b0ffe2;
+ padding:12px 17px;border-radius:10px;
+ font-size:11px;font-weight:800;max-width:90%;
+}
+.modal{
+ position:fixed;inset:0;background:#000b;
+ display:none;align-items:center;justify-content:center;
+ padding:18px;z-index:30;
+}
+.modal-box{
+ background:var(--panel);border:1px solid var(--border);
+ border-radius:16px;padding:20px;width:100%;max-width:390px;
+ max-height:85vh;overflow:auto;
+}
+.modal-box h3{margin-bottom:12px}
+.modal-box p{font-size:11px;color:var(--muted);line-height:1.8}
+input{
+ background:var(--panel2);color:white;
+ border:1px solid var(--border);border-radius:9px;
+ padding:12px;width:100%;margin:8px 0;
+}
+.separator{border:0;border-top:1px solid var(--border);margin:14px 0}
+
+@media(max-width:750px){
+ .layout{grid-template-columns:1fr}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .app{padding:12px 10px 100px}
+ .grid3{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:751px){
+ .side{position:sticky;top:12px;align-self:start}
+}
+</style>
+</head>
+
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+<header>
+ <div>
+  <div class="logo">NEON <span>LIFE</span></div>
+  <div class="sub">YOUR LIFE. YOUR CHOICES. YOUR EMPIRE.</div>
+ </div>
+ <div class="header-info">
+  <div class="pill" id="clock">DAY 1 • 08:00</div>
+  <button class="pill" onclick="openSettings()">⚙️</button>
+ </div>
+</header>
+
+<div class="stats">
+ <div class="stat">
+  <div class="stat-label">💰 YOUR MONEY</div>
+  <div class="stat-value" id="money">Rp0</div>
+  <div class="stat-sub">Available balance</div>
+ </div>
+ <div class="stat">
+  <div class="stat-label">💼 CAREER</div>
+  <div class="stat-value" id="career">Unemployed</div>
+  <div class="stat-sub" id="careerLevel">Career level 0</div>
+ </div>
+ <div class="stat">
+  <div class="stat-label">⭐ PLAYER LEVEL</div>
+  <div class="stat-value" id="level">1</div>
+  <div class="stat-sub" id="xpText">0 XP</div>
+ </div>
+ <div class="stat">
+  <div class="stat-label">🏢 NET WORTH</div>
+  <div class="stat-value" id="networth">Rp0</div>
+  <div class="stat-sub">Your total assets</div>
+ </div>
+</div>
+
+<div class="layout">
+
+<main>
+
+<!-- HOME -->
+<section class="section active" id="section-home">
+
+ <div class="panel">
+  <div class="panel-title">
+   <span>🌆 YOUR CITY</span>
+   <span class="muted" id="weather">CLEAR SKY</span>
+  </div>
+
+  <div class="world">
+   <canvas id="worldCanvas" width="720" height="370"></canvas>
+   <div class="world-footer">
+    <span id="currentLocation">🏠 SMALL APARTMENT</span>
+    <span id="worldDate">MONDAY • DAY 1</span>
+   </div>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">👤 CHARACTER CONDITION</div>
+
+  <div class="status-row">
+   <span class="name">⚡ Energy</span>
+   <div class="bar"><div class="green" id="energyBar"></div></div>
+   <span class="number" id="energyText">100</span>
+  </div>
+
+  <div class="status-row">
+   <span class="name">🍔 Hunger</span>
+   <div class="bar"><div class="goldbar" id="hungerBar"></div></div>
+   <span class="number" id="hungerText">100</span>
+  </div>
+
+  <div class="status-row">
+   <span class="name">❤️ Health</span>
+   <div class="bar"><div class="redbar" id="healthBar"></div></div>
+   <span class="number" id="healthText">100</span>
+  </div>
+
+  <div class="status-row">
+   <span class="name">😊 Happiness</span>
+   <div class="bar"><div class="purplebar" id="happyBar"></div></div>
+   <span class="number" id="happyText">100</span>
+  </div>
+
+  <div class="status-row">
+   <span class="name">🧠 Intelligence</span>
+   <div class="bar"><div class="cyan" id="intBar"></div></div>
+   <span class="number" id="intText">1</span>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📍 CITY LOCATIONS</div>
+  <div class="location-grid" id="locations"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📜 LIFE JOURNAL</div>
+  <div class="log" id="logs"></div>
+ </div>
+
+</section>
+
+<!-- CAREER -->
+<section class="section" id="section-career">
+
+ <div class="panel">
+  <div class="panel-title">💼 CAREER CENTER</div>
+  <p class="muted">Find a job, develop your career, and earn a salary.</p>
+  <hr class="separator">
+  <div id="currentJob"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">
+   <span>📋 AVAILABLE JOBS</span>
+   <span class="muted">JOB MARKET</span>
+  </div>
+  <div id="jobs"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">⏰ WORK SCHEDULE</div>
+  <div id="workStatus" class="card">
+   <div class="card-name">You are currently free.</div>
+   <div class="card-desc">Choose a job to start your career.</div>
+  </div>
+  <button class="action green" id="workButton" onclick="startWork()">START WORK SHIFT</button>
+  <p class="muted" style="margin-top:9px">A standard shift takes 8 in-game hours. Your energy decreases while working.</p>
+ </div>
+
+</section>
+
+<!-- SKILLS -->
+<section class="section" id="section-skills">
+
+ <div class="panel">
+  <div class="panel-title">🎓 EDUCATION & SKILLS</div>
+  <p class="muted">Invest in yourself to unlock better jobs.</p>
+  <div id="skills"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📚 EDUCATION CENTER</div>
+  <div id="education"></div>
+ </div>
+
+</section>
+
+<!-- SHOP -->
+<section class="section" id="section-shop">
+
+ <div class="panel">
+  <div class="panel-title">🛒 CITY MARKET</div>
+  <p class="muted">Purchase food, equipment, and lifestyle items.</p>
+  <div id="shop" class="grid2" style="margin-top:12px"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">🎒 YOUR INVENTORY</div>
+  <div id="inventory"></div>
+ </div>
+
+</section>
+
+<!-- PROPERTY -->
+<section class="section" id="section-property">
+
+ <div class="panel">
+  <div class="panel-title">🏠 REAL ESTATE</div>
+  <p class="muted">Choose a place to live. Better homes improve your happiness and energy recovery.</p>
+  <div id="houses" class="grid2" style="margin-top:12px"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">🚗 TRANSPORTATION</div>
+  <div id="vehicles"></div>
+ </div>
+
+</section>
+
+<!-- BUSINESS -->
+<section class="section" id="section-business">
+
+ <div class="panel">
+  <div class="panel-title">🏢 BUSINESS EMPIRE</div>
+  <p class="muted">Become an entrepreneur and create passive income.</p>
+  <div id="businesses" style="margin-top:12px"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📈 BUSINESS STATISTICS</div>
+  <div id="businessStats"></div>
+ </div>
+
+</section>
+
+<!-- BANK -->
+<section class="section" id="section-bank">
+
+ <div class="panel">
+  <div class="panel-title">🏦 NEON BANK</div>
+  <div class="card">
+   <div class="muted">TOTAL SAVINGS</div>
+   <div class="stat-value" id="bankBalance" style="margin-top:9px">Rp0</div>
+   <div class="card-desc">Your savings earn 0.1% interest per in-game day.</div>
+  </div>
+
+  <div style="margin-top:15px">
+   <label class="muted">TRANSACTION AMOUNT</label>
+   <input type="number" id="bankAmount" placeholder="Enter amount">
+   <button class="action green" onclick="deposit()">DEPOSIT MONEY</button>
+   <button class="action gray" onclick="withdraw()">WITHDRAW MONEY</button>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📜 TRANSACTION HISTORY</div>
+  <div id="transactions" class="log"></div>
+ </div>
+
+</section>
+
+<!-- PROFILE -->
+<section class="section" id="section-profile">
+
+ <div class="panel">
+  <div class="panel-title">👤 PLAYER PROFILE</div>
+  <div class="card-icon" style="font-size:50px">🧑</div>
+  <div class="card-name" id="profileName">New Player</div>
+  <div class="card-desc" id="profileDetails">Your journey starts here.</div>
+  <button class="action" onclick="changeName()">CHANGE NAME</button>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">🏆 ACHIEVEMENTS</div>
+  <div id="achievements"></div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">📊 LIFE STATISTICS</div>
+  <div id="statistics"></div>
+ </div>
+
+</section>
+
+</main>
+
+<aside class="side">
+
+ <div class="panel">
+  <div class="panel-title">📅 DAILY SCHEDULE</div>
+  <div id="schedule" class="card">
+   <div class="card-name">No activities scheduled.</div>
+  </div>
+  <button class="action gray" onclick="advanceTime(60)">⏩ PASS 1 HOUR</button>
+  <button class="action gray" onclick="sleep()">🌙 SLEEP UNTIL MORNING</button>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">💸 DAILY EXPENSES</div>
+  <div class="list-item">
+   <div class="list-info">
+    <div class="list-name">🏠 Housing</div>
+    <div class="list-desc" id="rentText">Weekly rent</div>
+   </div>
+  </div>
+  <div class="list-item">
+   <div class="list-info">
+    <div class="list-name">🍔 Food</div>
+    <div class="list-desc">Food and groceries</div>
+   </div>
+  </div>
+  <div class="list-item">
+   <div class="list-info">
+    <div class="list-name">🚗 Transportation</div>
+    <div class="list-desc">Travel costs</div>
+   </div>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">💡 LIFE ADVICE</div>
+  <p class="muted" id="advice">Work hard and develop your skills to unlock new opportunities.</p>
+ </div>
+
+ <div class="panel">
+  <div class="panel-title">💾 SAVE SYSTEM</div>
+  <div class="muted">Your progress is saved automatically.</div>
+  <button class="action green" onclick="saveGame()">SAVE GAME</button>
+ </div>
+
+</aside>
+
+</div>
+</div>
+
+<nav class="nav">
+ <button class="active" onclick="navigate('home',this)"><span>🏠</span>Home</button>
+ <button onclick="navigate('career',this)"><span>💼</span>Career</button>
+ <button onclick="navigate('skills',this)"><span>🎓</span>Skills</button>
+ <button onclick="navigate('shop',this)"><span>🛒</span>Shop</button>
+ <button onclick="navigate('property',this)"><span>🏡</span>Property</button>
+ <button onclick="navigate('business',this)"><span>🏢</span>Business</button>
+ <button onclick="navigate('bank',this)"><span>🏦</span>Bank</button>
+ <button onclick="navigate('profile',this)"><span>👤</span>Profile</button>
+</nav>
+
+<div class="modal" id="modal">
+ <div class="modal-box" id="modalContent"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ==============================================
+   01. GAME CONFIGURATION
+============================================== */
+
+const CONFIG={
+ SAVE_KEY:"neonLifeSimulatorV2",
+ MINUTES_PER_REAL_SECOND:10,
+ WORK_DURATION:480,
+ MAX_STAT:100,
+ START_MONEY:150000,
+ DAILY_FOOD_COST:10000,
+ DAILY_TRANSPORT_COST:5000
+};
+
+/* ==============================================
+   02. JOB DATABASE
+============================================== */
+
+const JOBS=[
+ {
+  id:"cleaner",
+  name:"Office Cleaner",
+  icon:"🧹",
+  salary:80000,
+  energy:30,
+  skill:"none",
+  requirement:0,
+  desc:"Keep offices clean and comfortable.",
+  location:"office"
+ },
+ {
+  id:"cashier",
+  name:"Supermarket Cashier",
+  icon:"🛒",
+  salary:100000,
+  energy:35,
+  skill:"communication",
+  requirement:1,
+  desc:"Handle customers and payments.",
+  location:"market"
+ },
+ {
+  id:"waiter",
+  name:"Restaurant Waiter",
+  icon:"🍽️",
+  salary:115000,
+  energy:38,
+  skill:"communication",
+  requirement:1,
+  desc:"Serve customers in a busy restaurant.",
+  location:"restaurant"
+ },
+ {
+  id:"barista",
+  name:"Professional Barista",
+  icon:"☕",
+  salary:150000,
+  energy:40,
+  skill:"cooking",
+  requirement:2,
+  desc:"Prepare drinks and serve coffee lovers.",
+  location:"cafe"
+ },
+ {
+  id:"courier",
+  name:"Delivery Courier",
+  icon:"🛵",
+  salary:160000,
+  energy:45,
+  skill:"none",
+  requirement:0,
+  vehicle:true,
+  desc:"Deliver packages across the city.",
+  location:"city"
+ },
+ {
+  id:"admin",
+  name:"Office Administrator",
+  icon:"💼",
+  salary:220000,
+  energy:35,
+  skill:"intelligence",
+  requirement:3,
+  education:1,
+  desc:"Manage office operations and documents.",
+  location:"office"
+ },
+ {
+  id:"designer",
+  name:"Graphic Designer",
+  icon:"🎨",
+  salary:300000,
+  energy:35,
+  skill:"creativity",
+  requirement:4,
+  education:1,
+  desc:"Create visual designs for companies.",
+  location:"office"
+ },
+ {
+  id:"programmer",
+  name:"Junior Programmer",
+  icon:"💻",
+  salary:450000,
+  energy:40,
+  skill:"programming",
+  requirement:5,
+  education:2,
+  desc:"Develop applications and software.",
+  location:"tech"
+ },
+ {
+  id:"accountant",
+  name:"Accountant",
+  icon:"📊",
+  salary:400000,
+  energy:38,
+  skill:"intelligence",
+  requirement:6,
+  education:2,
+  desc:"Manage company financial records.",
+  location:"office"
+ },
+ {
+  id:"manager",
+  name:"Company Manager",
+  icon:"👔",
+  salary:600000,
+  energy:45,
+  skill:"business",
+  requirement:6,
+  education:3,
+  desc:"Lead teams and manage operations.",
+  location:"office"
+ },
+ {
+  id:"engineer",
+  name:"Software Engineer",
+  icon:"🧑‍💻",
+  salary:900000,
+  energy:40,
+  skill:"programming",
+  requirement:9,
+  education:4,
+  desc:"Build advanced technology systems.",
+  location:"tech"
+ },
+ {
+  id:"director",
+  name:"Company Director",
+  icon:"🏆",
+  salary:1500000,
+  energy:35,
+  skill:"business",
+  requirement:10,
+  education:5,
+  desc:"Direct an entire company.",
+  location:"office"
+ }
+];
+
+/* ==============================================
+   03. SKILL DATABASE
+============================================== */
+
+const SKILLS=[
+ {id:"communication",name:"Communication",icon:"🗣️",desc:"Improve social and customer skills."},
+ {id:"cooking",name:"Cooking",icon:"👨‍🍳",desc:"Learn food preparation."},
+ {id:"programming",name:"Programming",icon:"💻",desc:"Learn software development."},
+ {id:"business",name:"Business",icon:"📈",desc:"Understand entrepreneurship."},
+ {id:"creativity",name:"Creativity",icon:"🎨",desc:"Improve creative thinking."},
+ {id:"intelligence",name:"Intelligence",icon:"🧠",desc:"Improve general knowledge."}
+];
+
+/* ==============================================
+   04. SHOP DATABASE
+============================================== */
+
+const ITEMS=[
+ {id:"bread",name:"Bread",icon:"🍞",price:5000,hunger:20,desc:"A simple food."},
+ {id:"rice",name:"Rice Meal",icon:"🍚",price:12000,hunger:45,desc:"A filling meal."},
+ {id:"burger",name:"Burger",icon:"🍔",price:18000,hunger:65,desc:"A delicious burger."},
+ {id:"coffee",name:"Coffee",icon:"☕",price:10000,energy:12,desc:"A little energy boost."},
+ {id:"laptop",name:"Basic Laptop",icon:"💻",price:2500000,skill:"programming",desc:"A laptop for learning."},
+ {id:"book",name:"Business Book",icon:"📚",price:150000,skill:"business",desc:"Improve your business knowledge."},
+ {id:"clothes",name:"Formal Clothes",icon:"👔",price:350000,happy:15,desc:"Look professional."},
+ {id:"phone",name:"Smartphone",icon:"📱",price:1200000,happy:10,desc:"Stay connected."},
+ {id:"gaming",name:"Gaming Console",icon:"🎮",price:3500000,happy:30,desc:"Enjoy your free time."}
+];
+
+/* ==============================================
+   05. PROPERTY DATABASE
+============================================== */
+
+const HOUSES=[
+ {
+  id:"room",
+  name:"Shared Boarding Room",
+  icon:"🛏️",
+  price:0,
+  rent:25000,
+  recovery:1,
+  happy:0,
+  desc:"A very simple starting home."
+ },
+ {
+  id:"studio",
+  name:"Small Studio Apartment",
+  icon:"🏢",
+  price:3000000,
+  rent:80000,
+  recovery:1.2,
+  happy:10,
+  desc:"A comfortable personal apartment."
+ },
+ {
+  id:"apartment",
+  name:"Modern Apartment",
+  icon:"🏙️",
+  price:15000000,
+  rent:200000,
+  recovery:1.5,
+  happy:20,
+  desc:"A modern city lifestyle."
+ },
+ {
+  id:"house",
+  name:"Family House",
+  icon:"🏡",
+  price:85000000,
+  rent:0,
+  recovery:1.8,
+  happy:30,
+  desc:"A spacious house that you own."
+ },
+ {
+  id:"villa",
+  name:"Luxury Villa",
+  icon:"🏰",
+  price:350000000,
+  rent:0,
+  recovery:2.2,
+  happy:45,
+  desc:"Live like a millionaire."
+ }
+];
+
+/* ==============================================
+   06. VEHICLE DATABASE
+============================================== */
+
+const VEHICLES=[
+ {id:"walk",name:"Walking",icon:"🚶",price:0,owned:true,desc:"Free but slower."},
+ {id:"bicycle",name:"Bicycle",icon:"🚲",price:750000,desc:"An affordable ride."},
+ {id:"motorcycle",name:"Motorcycle",icon:"🛵",price:12000000,desc:"Travel around the city."},
+ {id:"car",name:"Family Car",icon:"🚗",price:120000000,desc:"Comfortable transportation."},
+ {id:"supercar",name:"Supercar",icon:"🏎️",price:1200000000,desc:"Luxury and speed."}
+];
+
+/* ==============================================
+   07. BUSINESS DATABASE
+============================================== */
+
+const BUSINESSES=[
+ {id:"stall",name:"Food Stall",icon:"🍜",price:1000000,income:25000,desc:"A small food business."},
+ {id:"laundry",name:"Laundry Shop",icon:"🧺",price:8000000,income:150000,desc:"A growing laundry business."},
+ {id:"cafe",name:"Coffee Shop",icon:"☕",price:25000000,income:450000,desc:"Serve coffee to the city."},
+ {id:"store",name:"Mini Market",icon:"🏪",price:75000000,income:1200000,desc:"A neighborhood market."},
+ {id:"restaurant",name:"Restaurant",icon:"🍽️",price:200000000,income:3500000,desc:"A successful restaurant."},
+ {id:"company",name:"Technology Company",icon:"🏢",price:1000000000,income:20000000,desc:"A large technology business."}
+];
+
+/* ==============================================
+   08. LOCATION DATABASE
+============================================== */
+
+const LOCATIONS=[
+ {id:"home",name:"Your Home",icon:"🏠",desc:"Rest and recover.",action:"home"},
+ {id:"office",name:"Office District",icon:"🏢",desc:"Find office jobs.",action:"career"},
+ {id:"market",name:"Supermarket",icon:"🛒",desc:"Buy food and supplies.",action:"shop"},
+ {id:"restaurant",name:"Restaurant",icon:"🍽️",desc:"Enjoy a meal.",action:"shop"},
+ {id:"cafe",name:"Coffee Shop",icon:"☕",desc:"Get coffee and relax.",action:"shop"},
+ {id:"school",name:"University",icon:"🎓",desc:"Learn new skills.",action:"skills"},
+ {id:"tech",name:"Technology Center",icon:"💻",desc:"Find technology jobs.",action:"career"},
+ {id:"bank",name:"Neon Bank",icon:"🏦",desc:"Manage your savings.",action:"bank"}
+];
+
+/* ==============================================
+   09. DEFAULT PLAYER DATA
+============================================== */
+
+function createDefaultState(){
+ return {
+  name:"New Player",
+  money:CONFIG.START_MONEY,
+  bank:0,
+  age:20,
+  day:1,
+  month:1,
+  year:2026,
+  minute:480,
+  level:1,
+  xp:0,
+  health:100,
+  energy:100,
+  hunger:100,
+  happiness:100,
+  intelligence:1,
+  job:null,
+  jobLevel:0,
+  workProgress:0,
+  working:false,
+  skills:{
+   communication:0,
+   cooking:0,
+   programming:0,
+   business:0,
+   creativity:0,
+   intelligence:1
+  },
+  education:0,
+  house:"room",
+  ownedHouses:["room"],
+  vehicle:"walk",
+  ownedVehicles:["walk"],
+  inventory:{},
+  businesses:{},
+  totalIncome:0,
+  totalSpent:0,
+  totalWork:0,
+  totalDays:0,
+  transactions:[],
+  logs:[],
+  achievements:[],
+  lastSaved:Date.now(),
+  lastRentDay:1,
+  lastDailyExpense:1
+ };
+}
+
+let state=loadGame();
+let tickHandle=null;
+let toastHandle=null;
+
+/* ==============================================
+   10. UTILITIES
+============================================== */
+
+function $(id){
+ return document.getElementById(id);
+}
+
+function clone(obj){
+ return JSON.parse(JSON.stringify(obj));
+}
+
+function money(n){
+ n=Math.floor(n||0);
+ return "Rp"+n.toLocaleString("id-ID");
+}
+
+function clamp(n,min=0,max=100){
+ return Math.max(min,Math.min(max,n));
+}
+
+function getHouse(){
+ return HOUSES.find(h=>h.id===state.house)||HOUSES[0];
+}
+
+function getJob(){
+ return JOBS.find(j=>j.id===state.job)||null;
+}
+
+function getVehicle(){
+ return VEHICLES.find(v=>v.id===state.vehicle)||VEHICLES[0];
+}
+
+function notify(message){
+ const el=$("toast");
+ el.textContent=message;
+ el.style.display="block";
+ clearTimeout(toastHandle);
+ toastHandle=setTimeout(()=>el.style.display="none",2400);
+}
+
+function log(message){
+ const time=formatClock();
+ state.logs.unshift("Day "+state.day+" "+time+" — "+message);
+ state.logs=state.logs.slice(0,50);
+}
+
+function transaction(type,amount,description){
+ state.transactions.unshift({
+  type,amount,description,
+  day:state.day,
+  date:formatClock()
+ });
+ state.transactions=state.transactions.slice(0,50);
+}
+
+function addXP(amount){
+ state.xp+=amount;
+ while(state.xp>=state.level*100){
+  state.xp-=state.level*100;
+  state.level++;
+  notify("🎉 LEVEL UP! LEVEL "+state.level);
+  log("Reached player level "+state.level);
+ }
+}
+
+/* ==============================================
+   11. SAVE SYSTEM
+============================================== */
+
+function loadGame(){
+ try{
+  const raw=localStorage.getItem(CONFIG.SAVE_KEY);
+  if(!raw)return createDefaultState();
+
+  const saved=JSON.parse(raw);
+  const base=createDefaultState();
+
+  return {
+   ...base,
+   ...saved,
+   skills:{...base.skills,...saved.skills},
+   inventory:{...base.inventory,...saved.inventory},
+   businesses:{...base.businesses,...saved.businesses}
+  };
+ }catch(e){
+  console.warn("Save error",e);
+  return createDefaultState();
+ }
+}
+
+function saveGame(){
+ state.lastSaved=Date.now();
+ localStorage.setItem(CONFIG.SAVE_KEY,JSON.stringify(state));
+}
+
+function exportGame(){
+ const blob=new Blob(
+  [JSON.stringify(state,null,2)],
+  {type:"application/json"}
+ );
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="neon-life-save.json";
+ a.click();
+ URL.revokeObjectURL(url);
+ notify("Save exported!");
+}
+
+function importGame(event){
+ const file=event.target.files[0];
+ if(!file)return;
+
+ const reader=new FileReader();
+
+ reader.onload=()=>{
+  try{
+   const imported=JSON.parse(reader.result);
+   if(typeof imported.money!=="number"||
+      !imported.skills||
+      !imported.inventory)throw Error("Invalid");
+
+   state={
+    ...createDefaultState(),
+    ...imported
+   };
+
+   saveGame();
+   renderAll();
+   closeModal();
+   notify("Save imported!");
+  }catch(e){
+   notify("Invalid save file!");
+  }
+ };
+
+ reader.readAsText(file);
+}
+
+/* ==============================================
+   12. MONEY SYSTEM
+============================================== */
+
+function earn(amount,description="Income"){
+ amount=Math.max(0,Math.floor(amount));
+ state.money+=amount;
+ state.totalIncome+=amount;
+ transaction("INCOME",amount,description);
+}
+
+function spend(amount,description="Expense"){
+ amount=Math.floor(amount);
+
+ if(amount<=0||state.money<amount){
+  notify("Not enough money!");
+  return false;
+ }
+
+ state.money-=amount;
+ state.totalSpent+=amount;
+ transaction("EXPENSE",amount,description);
+ return true;
+}
+
+function getNetWorth(){
+ let assets=state.money+state.bank;
+
+ state.ownedHouses.forEach(id=>{
+  const h=HOUSES.find(x=>x.id===id);
+  if(h)assets+=h.price;
+ });
+
+ state.ownedVehicles.forEach(id=>{
+  const v=VEHICLES.find(x=>x.id===id);
+  if(v)assets+=v.price;
+ });
+
+ BUSINESSES.forEach(b=>{
+  assets+=(state.businesses[b.id]||0)*b.price;
+ });
+
+ return assets;
+}
+
+/* ==============================================
+   13. TIME SYSTEM
+============================================== */
+
+const WEEKDAYS=[
+ "MONDAY","TUESDAY","WEDNESDAY","THURSDAY",
+ "FRIDAY","SATURDAY","SUNDAY"
+];
+
+const MONTHS=[
+ "JANUARY","FEBRUARY","MARCH","APRIL",
+ "MAY","JUNE","JULY","AUGUST",
+ "SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"
+];
+
+function formatClock(){
+ const h=Math.floor(state.minute/60)%24;
+ const m=state.minute%60;
+ return String(h).padStart(2,"0")+":"+
+        String(m).padStart(2,"0");
+}
+
+function advanceTime(minutes){
+ if(minutes<=0)return;
+
+ let remaining=minutes;
+
+ while(remaining>0){
+  const step=Math.min(remaining,10);
+  advanceNeeds(step);
+  state.minute+=step;
+  remaining-=step;
+
+  if(state.minute>=1440){
+   state.minute-=1440;
+   newDay();
+  }
+ }
+
+ renderAll();
+ saveGame();
+}
+
+function advanceNeeds(minutes){
+ const factor=minutes/60;
+
+ state.hunger=clamp(state.hunger-1.4*factor);
+ state.energy=clamp(state.energy-.4*factor);
+ state.happiness=clamp(state.happiness-.12*factor);
+
+ if(state.hunger<=0){
+  state.health=clamp(state.health-.8*factor);
+ }
+
+ if(state.energy<=0){
+  state.health=clamp(state.health-.5*factor);
+ }
+
+ if(state.health<=0){
+  state.health=1;
+  notify("⚠️ Your health is critically low!");
+ }
+}
+
+function newDay(){
+ state.day++;
+ state.totalDays++;
+
+ if(state.day%7===1){
+  state.age++;
+ }
+
+ if(state.day%30===1){
+  state.month++;
+  if(state.month>12){
+   state.month=1;
+   state.year++;
+  }
+ }
+
+ if(state.day-state.lastDailyExpense>=1){
+  const expense=CONFIG.DAILY_FOOD_COST+
+   CONFIG.DAILY_TRANSPORT_COST;
+
+  if(state.money>=expense){
+   spend(expense,"Daily living expenses");
+  }else{
+   state.happiness=clamp(state.happiness-10);
+   notify("⚠️ You cannot afford your daily expenses!");
+  }
+
+  state.lastDailyExpense=state.day;
+ }
+
+ // Weekly rent
+ if(state.day-state.lastRentDay>=7){
+  const rent=getHouse().rent;
+
+  if(rent>0){
+   if(state.money>=rent){
+    spend(rent,"Weekly rent");
+    notify("🏠 Rent paid: "+money(rent));
+   }else{
+    state.happiness=clamp(state.happiness-15);
+    notify("⚠️ Your rent is overdue!");
+   }
+  }
+
+  state.lastRentDay=state.day;
+ }
+
+ // Bank interest
+ if(state.bank>0){
+  const interest=Math.floor(state.bank*.001);
+  state.bank+=interest;
+  transaction("INTEREST",interest,"Bank interest");
+ }
+
+ // Passive business income
+ let passive=0;
+
+ BUSINESSES.forEach(b=>{
+  passive+=(state.businesses[b.id]||0)*b.income;
+ });
+
+ if(passive>0){
+  earn(passive,"Business daily revenue");
+ }
+
+ // Recover small amount
+ state.energy=clamp(state.energy+8);
+ state.hunger=clamp(state.hunger+5);
+
+ log("A new day begins.");
+ checkAchievements();
+}
+
+function clockTick(){
+ if(state.working){
+  state.workProgress+=CONFIG.MINUTES_PER_REAL_SECOND;
+  state.minute+=CONFIG.MINUTES_PER_REAL_SECOND;
+
+  advanceNeeds(CONFIG.MINUTES_PER_REAL_SECOND);
+
+  if(state.minute>=1440){
+   state.minute-=1440;
+   newDay();
+  }
+
+  if(state.workProgress>=CONFIG.WORK_DURATION){
+   finishWork();
+  }
+ }else{
+  advanceTime(CONFIG.MINUTES_PER_REAL_SECOND);
+ }
+
+ renderAll();
+}
+
+/* ==============================================
+   14. WORK SYSTEM
+============================================== */
+
+function canApply(job){
+ if(job.skill!=="none"){
+  if((state.skills[job.skill]||0)<job.requirement)return false;
+ }
+
+ if(job.education&&state.education<job.education)return false;
+
+ if(job.vehicle&&!state.ownedVehicles.some(v=>v!=="walk")){
+  return false;
+ }
+
+ return true;
+}
+
+function applyJob(id){
+ const job=JOBS.find(j=>j.id===id);
+ if(!job)return;
+
+ if(!canApply(job)){
+  notify("You do not meet the job requirements!");
+  return;
+ }
+
+ if(state.working){
+  notify("Finish your current shift first!");
+  return;
+ }
+
+ state.job=id;
+ state.jobLevel=1;
+ state.workProgress=0;
+
+ log("Got a new job: "+job.name);
+ addXP(20);
+
+ notify("🎉 Congratulations! You are hired!");
+ renderAll();
+ saveGame();
+}
+
+function startWork(){
+ const job=getJob();
+
+ if(!job){
+  notify("Find a job first!");
+  return;
+ }
+
+ if(state.working){
+  notify("You are already working!");
+  return;
+ }
+
+ if(state.energy<35){
+  notify("You need more energy!");
+  return;
+ }
+
+ if(state.hunger<15){
+  notify("You need to eat first!");
+  return;
+ }
+
+ state.working=true;
+ state.workProgress=0;
+
+ log("Started work shift at "+job.name);
+ notify("💼 Your shift has started!");
+
+ renderAll();
+ saveGame();
+}
+
+function finishWork(){
+ const job=getJob();
+ if(!job)return;
+
+ state.working=false;
+
+ const bonus=Math.floor(
+  job.salary*
+  (1+state.jobLevel*.08)*
+  (state.happiness/100*.2+.8)
+ );
+
+ earn(bonus,"Salary: "+job.name);
+ state.totalWork++;
+ state.jobLevel++;
+ state.energy=clamp(state.energy-15);
+
+ addXP(35);
+ state.skills[job.skill]=(state.skills[job.skill]||0)+1;
+ if(job.skill==="intelligence"){
+  state.intelligence++;
+ }
+
+ log("Finished shift. Received "+money(bonus));
+ notify("💰 Salary received: "+money(bonus));
+
+ checkAchievements();
+ saveGame();
+}
+
+function quitJob(){
+ if(state.working){
+  notify("Finish your shift before quitting!");
+  return;
+ }
+
+ if(!state.job)return;
+
+ const old=getJob();
+ state.job=null;
+ state.jobLevel=0;
+
+ log("Quit job: "+old.name);
+ notify("You left your job.");
+ renderAll();
+ saveGame();
+}
+
+function renderCareer(){
+ const job=getJob();
+
+ $("currentJob").innerHTML=job?
+ `
+ <div class="card">
+  <div class="card-icon">${job.icon}</div>
+  <div class="card-name">${job.name}</div>
+  <div class="card-desc">Career level: ${state.jobLevel}</div>
+  <div class="card-price">${money(job.salary)} base salary / shift</div>
+  <button class="action red" onclick="quitJob()">QUIT THIS JOB</button>
+ </div>
+ `:
+ `
+ <div class="card">
+  <div class="card-icon">🔎</div>
+  <div class="card-name">Currently unemployed</div>
+  <div class="card-desc">Browse available jobs below and start your career.</div>
+ </div>
+ `;
+
+ $("jobs").innerHTML=JOBS.map(j=>{
+  const unlocked=canApply(j);
+  const active=state.job===j.id;
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${j.icon}</div>
+   <div class="list-info">
+    <div class="list-name">${j.name}</div>
+    <div class="list-desc">${j.desc}</div>
+    <div class="card-price">${money(j.salary)} / shift</div>
+    <div class="muted">Skill: ${j.skill==="none"?"None":j.skill+" Lv."+j.requirement}
+     ${j.education?" • Education "+j.education:""}
+    </div>
+   </div>
+   <button class="mini-btn" ${!unlocked||active||state.working?"disabled":""}
+    onclick="applyJob('${j.id}')">
+    ${active?"HIRED":unlocked?"APPLY":"LOCKED"}
+   </button>
+  </div>`;
+ }).join("");
+
+ $("workButton").disabled=!job||state.working;
+ $("workButton").textContent=state.working?
+ "WORKING... "+Math.floor(state.workProgress/CONFIG.WORK_DURATION*100)+"%":
+ "START WORK SHIFT";
+
+ $("workStatus").innerHTML=state.working?
+ `
+ <div class="card-name">💼 Working as ${job.name}</div>
+ <div class="card-desc">Keep going! Your shift is in progress.</div>
+ <div class="bar"><div class="cyan" style="width:${state.workProgress/CONFIG.WORK_DURATION*100}%"></div></div>
+ <div class="muted" style="margin-top:8px">${Math.floor(state.workProgress)} / 480 minutes</div>
+ `:
+ `
+ <div class="card-name">${job?"Ready for your next shift.":"You are currently free."}</div>
+ <div class="card-desc">${job?"Go to work to earn your salary.":"Choose a job to start your career."}</div>
+ `;
+}
+
+/* ==============================================
+   15. SKILL SYSTEM
+============================================== */
+
+function trainSkill(id){
+ const skill=SKILLS.find(s=>s.id===id);
+ if(!skill)return;
+
+ const level=state.skills[id]||0;
+ const cost=(level+1)*30000;
+ const energyCost=18;
+
+ if(state.money<cost){
+  notify("Not enough money for training!");
+  return;
+ }
+
+ if(state.energy<energyCost){
+  notify("Not enough energy!");
+  return;
+ }
+
+ if(!spend(cost,"Skill training"))return;
+
+ state.energy-=energyCost;
+ state.skills[id]++;
+ addXP(25);
+
+ log("Improved skill: "+skill.name);
+ notify("🎓 "+skill.name+" improved!");
+
+ renderAll();
+ saveGame();
+}
+
+function renderSkills(){
+ $("skills").innerHTML=SKILLS.map(s=>{
+  const lv=state.skills[s.id]||0;
+  const cost=(lv+1)*30000;
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${s.icon}</div>
+   <div class="list-info">
+    <div class="list-name">${s.name} • Level ${lv}</div>
+    <div class="list-desc">${s.desc}</div>
+    <div class="bar"><div class="purplebar" style="width:${Math.min(lv*10,100)}%"></div></div>
+   </div>
+   <button class="mini-btn" ${state.money<cost||state.energy<18?"disabled":""}
+    onclick="trainSkill('${s.id}')">${money(cost)}</button>
+  </div>`;
+ }).join("");
+
+ const courses=[
+  {level:1,name:"Basic Education",price:150000},
+  {level:2,name:"High School Diploma",price:500000},
+  {level:3,name:"Business Certificate",price:1500000},
+  {level:4,name:"University Degree",price:5000000},
+  {level:5,name:"Advanced Degree",price:15000000}
+ ];
+
+ $("education").innerHTML=courses.map(c=>`
+ <div class="list-item">
+  <div class="list-icon">📚</div>
+  <div class="list-info">
+   <div class="list-name">${c.name}</div>
+   <div class="list-desc">Education level ${c.level}</div>
+  </div>
+  <button class="mini-btn" ${state.education>=c.level||state.money<c.price?"disabled":""}
+   onclick="buyEducation(${c.level},${c.price})">
+   ${state.education>=c.level?"DONE":money(c.price)}
+  </button>
+ </div>
+ `).join("");
+}
+
+function buyEducation(level,cost){
+ if(level!==state.education+1){
+  notify("Complete previous education first!");
+  return;
+ }
+
+ if(state.energy<30){
+  notify("You need more energy!");
+  return;
+ }
+
+ if(!spend(cost,"Education course"))return;
+
+ state.energy-=30;
+ state.education=level;
+ state.skills.intelligence++;
+ state.intelligence++;
+ addXP(100);
+
+ log("Completed education level "+level);
+ notify("🎓 Education completed!");
+
+ renderAll();
+ saveGame();
+}
+
+/* ==============================================
+   16. SHOP SYSTEM
+============================================== */
+
+function buyItem(id){
+ const item=ITEMS.find(x=>x.id===id);
+ if(!item)return;
+
+ if(!spend(item.price,"Purchased "+item.name))return;
+
+ state.inventory[id]=(state.inventory[id]||0)+1;
+
+ log("Purchased "+item.name);
+ notify("Purchased "+item.name);
+
+ renderAll();
+ saveGame();
+}
+
+function useItem(id){
+ const item=ITEMS.find(x=>x.id===id);
+ if(!item)return;
+
+ if(!state.inventory[id]||state.inventory[id]<=0){
+  return;
+ }
+
+ state.inventory[id]--;
+
+ if(item.hunger)state.hunger=clamp(state.hunger+item.hunger);
+ if(item.energy)state.energy=clamp(state.energy+item.energy);
+ if(item.happy)state.happiness=clamp(state.happiness+item.happy);
+
+ if(item.skill){
+  state.skills[item.skill]++;
+  if(item.skill==="programming")state.intelligence++;
+ }
+
+ log("Used item: "+item.name);
+ notify("Item used!");
+
+ renderAll();
+ saveGame();
+}
+
+function renderShop(){
+ $("shop").innerHTML=ITEMS.map(item=>`
+ <div class="card">
+  <div class="card-icon">${item.icon}</div>
+  <div class="card-name">${item.name}</div>
+  <div class="card-desc">${item.desc}</div>
+  <div class="card-price">${money(item.price)}</div>
+  <button class="action" ${state.money<item.price?"disabled":""}
+   onclick="buyItem('${item.id}')">BUY ITEM</button>
+ </div>
+ `).join("");
+
+ $("inventory").innerHTML=ITEMS.map(item=>{
+  const count=state.inventory[item.id]||0;
+  if(count<=0)return "";
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${item.icon}</div>
+   <div class="list-info">
+    <div class="list-name">${item.name}</div>
+    <div class="list-desc">Quantity: ${count}</div>
+   </div>
+   <button class="mini-btn" onclick="useItem('${item.id}')">USE</button>
+  </div>`;
+ }).join("")||'<div class="muted">Your inventory is empty.</div>';
+}
+
+/* ==============================================
+   17. PROPERTY SYSTEM
+============================================== */
+
+function buyHouse(id){
+ const house=HOUSES.find(h=>h.id===id);
+ if(!house)return;
+
+ if(state.ownedHouses.includes(id)){
+  state.house=id;
+  notify("🏠 New home selected!");
+  renderAll();
+  saveGame();
+  return;
+ }
+
+ if(!spend(house.price,"Purchased property: "+house.name))return;
+
+ state.ownedHouses.push(id);
+ state.house=id;
+
+ log("Purchased property "+house.name);
+ notify("🏡 Property purchased!");
+
+ renderAll();
+ saveGame();
+}
+
+function buyVehicle(id){
+ const v=VEHICLES.find(x=>x.id===id);
+ if(!v)return;
+
+ if(state.ownedVehicles.includes(id)){
+  state.vehicle=id;
+  notify("Vehicle selected!");
+  renderAll();
+  saveGame();
+  return;
+ }
+
+ if(!spend(v.price,"Purchased vehicle: "+v.name))return;
+
+ state.ownedVehicles.push(id);
+ state.vehicle=id;
+
+ log("Purchased vehicle "+v.name);
+ notify("🚗 Vehicle purchased!");
+
+ renderAll();
+ saveGame();
+}
+
+function renderProperty(){
+ $("houses").innerHTML=HOUSES.map(h=>{
+  const owned=state.ownedHouses.includes(h.id);
+  const selected=state.house===h.id;
+
+  return `
+  <div class="card">
+   <div class="card-icon">${h.icon}</div>
+   <div class="card-name">${h.name}</div>
+   <div class="card-desc">${h.desc}</div>
+   <div class="card-price">${h.price?money(h.price):"STARTER HOME"}</div>
+   <div class="muted">Rent: ${h.rent?money(h.rent)+"/week":"No rent"}</div>
+   <button class="action ${selected?"gray":"green"}"
+    ${!owned&&state.money<h.price?"disabled":""}
+    onclick="buyHouse('${h.id}')">
+    ${selected?"CURRENT HOME":owned?"MOVE IN":"BUY PROPERTY"}
+   </button>
+  </div>`;
+ }).join("");
+
+ $("vehicles").innerHTML=VEHICLES.map(v=>{
+  const owned=state.ownedVehicles.includes(v.id);
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${v.icon}</div>
+   <div class="list-info">
+    <div class="list-name">${v.name}</div>
+    <div class="list-desc">${v.desc}</div>
+    <div class="card-price">${v.price?money(v.price):"FREE"}</div>
+   </div>
+   <button class="mini-btn" ${!owned&&state.money<v.price?"disabled":""}
+    onclick="buyVehicle('${v.id}')">
+    ${state.vehicle===v.id?"ACTIVE":owned?"SELECT":"BUY"}
+   </button>
+  </div>`;
+ }).join("");
+}
+
+/* ==============================================
+   18. BUSINESS SYSTEM
+============================================== */
+
+function buyBusiness(id){
+ const b=BUSINESSES.find(x=>x.id===id);
+ if(!b)return;
+
+ if(!spend(b.price,"Business investment: "+b.name))return;
+
+ state.businesses[id]=(state.businesses[id]||0)+1;
+ state.happiness=clamp(state.happiness+5);
+
+ log("Started business: "+b.name);
+ notify("🏢 Business acquired!");
+
+ renderAll();
+ saveGame();
+}
+
+function renderBusiness(){
+ $("businesses").innerHTML=BUSINESSES.map(b=>{
+  const count=state.businesses[b.id]||0;
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${b.icon}</div>
+   <div class="list-info">
+    <div class="list-name">${b.name} • Owned ${count}</div>
+    <div class="list-desc">${b.desc}</div>
+    <div class="card-price">+${money(b.income)}/day per business</div>
+    <div class="muted">Purchase: ${money(b.price)}</div>
+   </div>
+   <button class="mini-btn" ${state.money<b.price?"disabled":""}
+    onclick="buyBusiness('${b.id}')">INVEST</button>
+  </div>`;
+ }).join("");
+
+ let count=0;
+ let income=0;
+
+ BUSINESSES.forEach(b=>{
+  count+=state.businesses[b.id]||0;
+  income+=(state.businesses[b.id]||0)*b.income;
+ });
+
+ $("businessStats").innerHTML=`
+  <div class="list-item">
+   <div class="list-info">Total businesses owned</div>
+   <b>${count}</b>
+  </div>
+  <div class="list-item">
+   <div class="list-info">Daily passive income</div>
+   <b style="color:var(--green)">${money(income)}</b>
+  </div>
+ `;
+}
+
+/* ==============================================
+   19. BANKING SYSTEM
+============================================== */
+
+function deposit(){
+ const amount=Math.floor(Number($("bankAmount").value));
+
+ if(!Number.isFinite(amount)||amount<=0){
+  notify("Enter a valid amount!");
+  return;
+ }
+
+ if(!spend(amount,"Bank deposit"))return;
+
+ state.bank+=amount;
+ transaction("DEPOSIT",amount,"Money deposited");
+ notify("🏦 Deposit successful!");
+
+ renderAll();
+ saveGame();
+}
+
+function withdraw(){
+ const amount=Math.floor(Number($("bankAmount").value));
+
+ if(!Number.isFinite(amount)||amount<=0||amount>state.bank){
+  notify("Invalid withdrawal amount!");
+  return;
+ }
+
+ state.bank-=amount;
+ state.money+=amount;
+
+ transaction("WITHDRAW",amount,"Money withdrawn");
+ notify("Withdrawal successful!");
+
+ renderAll();
+ saveGame();
+}
+
+function renderBank(){
+ $("bankBalance").textContent=money(state.bank);
+
+ $("transactions").innerHTML=state.transactions.map(t=>`
+ <div>
+  ${t.type==="INCOME"||t.type==="INTEREST"?"🟢":"🔴"}
+  ${t.description} — ${money(t.amount)}
+  <span style="float:right">${t.date}</span>
+ </div>
+ `).join("")||"No transactions yet.";
+}
+
+/* ==============================================
+   20. LOCATIONS
+============================================== */
+
+function goLocation(id){
+ const loc=LOCATIONS.find(l=>l.id===id);
+ if(!loc)return;
+
+ if(state.working){
+  notify("You cannot leave during a work shift!");
+  return;
+ }
+
+ if(id!=="home"){
+  const travelCost=state.vehicle==="walk"?0:
+   state.vehicle==="bicycle"?1000:
+   state.vehicle==="motorcycle"?3000:
+   state.vehicle==="car"?5000:8000;
+
+  if(travelCost>0&&!spend(travelCost,"Transportation"))return;
+
+  advanceTime(20);
+ }
+
+ if(id==="home"){
+  notify("You are at home.");
+ }else{
+  notify("📍 Arrived at "+loc.name);
+ }
+
+ navigateByName(loc.action);
+}
+
+function navigateByName(name){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ $("section-"+name).classList.add("active");
+
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+ const index={
+  home:0,career:1,skills:2,shop:3,
+  property:4,business:5,bank:6,profile:7
+ }[name];
+
+ if(index!==undefined){
+  document.querySelectorAll(".nav button")[index].classList.add("active");
+ }
+}
+
+/* ==============================================
+   21. FOOD & REST
+============================================== */
+
+function eatMeal(){
+ if(!spend(12000,"Restaurant meal"))return;
+
+ state.hunger=clamp(state.hunger+50);
+ state.happiness=clamp(state.happiness+8);
+
+ advanceTime(30);
+ notify("🍽️ You enjoyed a meal!");
+
+ renderAll();
+ saveGame();
+}
+
+function sleep(){
+ if(state.working){
+  notify("You cannot sleep while working!");
+  return;
+ }
+
+ const hour=Math.floor(state.minute/60);
+ let hours=hour>=22?8:hour>=18?10:8;
+
+ state.energy=clamp(state.energy+hours*12*getHouse().recovery);
+ state.health=clamp(state.health+hours*2);
+ state.happiness=clamp(state.happiness+5);
+
+ advanceTime(hours*60);
+
+ notify("🌙 You rested and recovered.");
+ renderAll();
+ saveGame();
+}
+
+/* ==============================================
+   22. DAILY ACTIVITIES
+============================================== */
+
+function studyAtHome(){
+ if(state.energy<15){
+  notify("You need more energy!");
+  return;
+ }
+
+ state.energy-=15;
+ state.skills.intelligence++;
+ state.intelligence++;
+ state.happiness=clamp(state.happiness-2);
+
+ advanceTime(60);
+ addXP(15);
+
+ log("Studied independently.");
+ notify("📚 You learned something new!");
+
+ renderAll();
+ saveGame();
+}
+
+function relax(){
+ if(state.working)return;
+
+ state.happiness=clamp(state.happiness+20);
+ state.energy=clamp(state.energy-5);
+
+ advanceTime(60);
+
+ notify("😊 You feel better!");
+ renderAll();
+ saveGame();
+}
+
+/* ==============================================
+   23. ACHIEVEMENTS
+============================================== */
+
+const ACHIEVEMENTS=[
+ {id:"firstjob",name:"First Employment",desc:"Get your first job.",check:()=>state.totalWork>0},
+ {id:"worker",name:"Hard Worker",desc:"Complete 10 shifts.",check:()=>state.totalWork>=10},
+ {id:"million",name:"First Million",desc:"Have net worth of Rp1 million.",check:()=>getNetWorth()>=1000000},
+ {id:"rich",name:"Millionaire",desc:"Have net worth of Rp100 million.",check:()=>getNetWorth()>=100000000},
+ {id:"business",name:"Entrepreneur",desc:"Own your first business.",check:()=>Object.values(state.businesses).some(v=>v>0)},
+ {id:"education",name:"Graduate",desc:"Complete level 3 education.",check:()=>state.education>=3},
+ {id:"home",name:"Homeowner",desc:"Buy a house.",check:()=>state.ownedHouses.includes("house")},
+ {id:"vehicle",name:"Driver",desc:"Own a car.",check:()=>state.ownedVehicles.includes("car")}
+];
+
+function checkAchievements(){
+ ACHIEVEMENTS.forEach(a=>{
+  if(!state.achievements.includes(a.id)&&a.check()){
+   state.achievements.push(a.id);
+   earn(50000,"Achievement reward");
+   log("Achievement unlocked: "+a.name);
+   notify("🏆 Achievement unlocked: "+a.name);
+  }
+ });
+}
+
+function renderAchievements(){
+ $("achievements").innerHTML=ACHIEVEMENTS.map(a=>{
+  const unlocked=state.achievements.includes(a.id);
+
+  return `
+  <div class="list-item">
+   <div class="list-icon">${unlocked?"🏆":"🔒"}</div>
+   <div class="list-info">
+    <div class="list-name">${a.name}</div>
+    <div class="list-desc">${a.desc}</div>
+   </div>
+   <span class="muted">${unlocked?"UNLOCKED":"LOCKED"}</span>
+  </div>`;
+ }).join("");
+}
+
+/* ==============================================
+   24. PROFILE
+============================================== */
+
+function changeName(){
+ const name=prompt("Enter your character name:",state.name);
+ if(!name||!name.trim())return;
+
+ state.name=name.trim().slice(0,24);
+ notify("Character name updated!");
+ renderAll();
+ saveGame();
+}
+
+function renderProfile(){
+ $("profileName").textContent=state.name;
+ $("profileDetails").textContent=
+  "Age "+state.age+" • "+state.year+" • "+getRank();
+
+ $("statistics").innerHTML=`
+  <div class="list-item"><div class="list-info">Lifetime earnings</div><b>${money(state.totalIncome)}</b></div>
+  <div class="list-item"><div class="list-info">Total spending</div><b>${money(state.totalSpent)}</b></div>
+  <div class="list-item"><div class="list-info">Work shifts</div><b>${state.totalWork}</b></div>
+  <div class="list-item"><div class="list-info">Days survived</div><b>${state.totalDays+1}</b></div>
+  <div class="list-item"><div class="list-info">Education</div><b>${state.education}</b></div>
+  <div class="list-item"><div class="list-info">Total businesses</div><b>${Object.values(state.businesses).reduce((a,b)=>a+b,0)}</b></div>
+  <div class="list-item"><div class="list-info">Net worth</div><b>${money(getNetWorth())}</b></div>
+ `;
+}
+
+/* ==============================================
+   25. CITY WORLD CANVAS
+============================================== */
+
+const canvas=$("worldCanvas");
+const ctx=canvas.getContext("2d");
+
+function drawWorld(){
+ const w=canvas.width;
+ const h=canvas.height;
+
+ ctx.clearRect(0,0,w,h);
+
+ const sky=ctx.createLinearGradient(0,0,0,h);
+ sky.addColorStop(0,"#101b39");
+ sky.addColorStop(1,"#274c60");
+
+ ctx.fillStyle=sky;
+ ctx.fillRect(0,0,w,h);
+
+ // Stars
+ for(let i=0;i<60;i++){
+  ctx.fillStyle=i%2?"#7cb9db":"#d7efff";
+  ctx.fillRect((i*137)%w,(i*53)%160,2,2);
+ }
+
+ // Moon
+ ctx.fillStyle="#e3eaff";
+ ctx.beginPath();
+ ctx.arc(620,50,23,0,Math.PI*2);
+ ctx.fill();
+
+ // Background buildings
+ const buildings=[
+  [20,100,70,170],[105,65,90,205],
+  [220,115,70,155],[310,45,95,225],
+  [425,105,75,165],[520,75,75,195],
+  [615,120,80,150]
+ ];
+
+ buildings.forEach((b,i)=>{
+  ctx.fillStyle=i%2?"#182c49":"#203652";
+  ctx.fillRect(b[0],b[1],b[2],b[3]);
+
+  for(let x=b[0]+10;x<b[0]+b[2]-5;x+=18){
+   for(let y=b[1]+15;y<b[1]+b[3]-10;y+=22){
+    ctx.fillStyle=(x+y)%3?"#f3cb72":"#5bc8e7";
+    ctx.fillRect(x,y,8,11);
+   }
+  }
+ });
+
+ // Ground
+ ctx.fillStyle="#263e43";
+ ctx.fillRect(0,275,w,95);
+
+ // Street
+ ctx.fillStyle="#263343";
+ ctx.fillRect(0,310,w,60);
+
+ ctx.strokeStyle="#d5c47d";
+ ctx.setLineDash([20,18]);
+ ctx.lineWidth=3;
+ ctx.beginPath();
+ ctx.moveTo(0,340);
+ ctx.lineTo(w,340);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
+ // Player character
+ const px=350;
+ const py=260;
+
+ ctx.fillStyle="#f0bd90";
+ ctx.fillRect(px-7,py-27,14,15);
+
+ ctx.fillStyle="#243c70";
+ ctx.fillRect(px-10,py-12,20,24);
+
+ ctx.fillStyle="#263c58";
+ ctx.fillRect(px-9,py+12,7,15);
+ ctx.fillRect(px+2,py+12,7,15);
+
+ ctx.fillStyle="#e9f2ff";
+ ctx.font="bold 12px Arial";
+ ctx.textAlign="center";
+ ctx.fillText(state.name,px,py-36);
+
+ // City label
+ ctx.textAlign="left";
+ ctx.font="bold 18px Arial";
+ ctx.fillText("NEON CITY",18,28);
+
+ ctx.font="11px Arial";
+ ctx.fillStyle="#9dc8e7";
+ ctx.fillText("BUILD YOUR FUTURE",18,44);
+}
+
+/* ==============================================
+   26. LOCATIONS RENDER
+============================================== */
+
+function renderLocations(){
+ $("locations").innerHTML=LOCATIONS.map(l=>`
+  <button class="location ${l.id==="home"?"selected":""}"
+   onclick="goLocation('${l.id}')">
+   <div class="emoji">${l.icon}</div>
+   <div class="locname">${l.name}</div>
+   <div class="locdesc">${l.desc}</div>
+  </button>
+ `).join("");
+}
+
+/* ==============================================
+   27. UI RENDERING
+============================================== */
+
+function renderStats(){
+ $("money").textContent=money(state.money);
+ $("career").textContent=getJob()?.name||"Unemployed";
+ $("careerLevel").textContent="Career level "+state.jobLevel;
+ $("level").textContent=state.level;
+ $("xpText").textContent=state.xp+" / "+(state.level*100)+" XP";
+ $("networth").textContent=money(getNetWorth());
+
+ $("clock").textContent=
+  "DAY "+state.day+" • "+formatClock();
+
+ $("worldDate").textContent=
+  WEEKDAYS[(state.day-1)%7]+" • DAY "+state.day;
+
+ $("currentLocation").textContent=
+  "🏠 "+getHouse().name;
+
+ $("energyBar").style.width=state.energy+"%";
+ $("hungerBar").style.width=state.hunger+"%";
+ $("healthBar").style.width=state.health+"%";
+ $("happyBar").style.width=state.happiness+"%";
+ $("intBar").style.width=Math.min(state.intelligence*10,100)+"%";
+
+ $("energyText").textContent=Math.floor(state.energy);
+ $("hungerText").textContent=Math.floor(state.hunger);
+ $("healthText").textContent=Math.floor(state.health);
+ $("happyText").textContent=Math.floor(state.happiness);
+ $("intText").textContent=state.intelligence;
+
+ $("rentText").textContent=getHouse().rent?
+  money(getHouse().rent)+" / week":"No rent";
+
+ $("advice").textContent=
+  state.energy<25?"You need to rest before working.":
+  state.hunger<25?"Find some food before your energy drops.":
+  !state.job?"Find a job to start earning your first salary.":
+  state.skills.programming<5?"Consider learning programming for better career opportunities.":
+  "Keep developing your skills and building your wealth.";
+
+ $("schedule").innerHTML=`
+  <div class="card-name">${formatClock()}</div>
+  <div class="card-desc">
+   ${state.working?"Currently working.":
+     state.energy<30?"You are exhausted.":
+     state.hunger<25?"You should find food.":
+     "You have free time."}
+  </div>
+ `;
+}
+
+function renderLogs(){
+ $("logs").innerHTML=state.logs.map(x=>`
+  <div>${escapeText(x)}</div>
+ `).join("")||"Your life journey starts here.";
+}
+
+function escapeText(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#39;"
+ })[c]);
+}
+
+function renderAll(){
+ renderStats();
+ renderCareer();
+ renderSkills();
+ renderShop();
+ renderProperty();
+ renderBusiness();
+ renderBank();
+ renderProfile();
+ renderAchievements();
+ renderLocations();
+ renderLogs();
+ drawWorld();
+}
+
+/* ==============================================
+   28. NAVIGATION
+============================================== */
+
+function navigate(name,button){
+ document.querySelectorAll(".section").forEach(s=>{
+  s.classList.remove("active");
+ });
+
+ $("section-"+name).classList.add("active");
+
+ document.querySelectorAll(".nav button").forEach(b=>{
+  b.classList.remove("active");
+ });
+
+ button.classList.add("active");
+}
+
+function openSettings(){
+ $("modalContent").innerHTML=`
+  <h3>⚙️ GAME SETTINGS</h3>
+  <p>Manage your progress and game data.</p>
+
+  <button class="action green" onclick="saveGame();notify('Game saved!');closeModal()">
+   SAVE GAME
+  </button>
+
+  <button class="action gray" onclick="exportGame()">
+   EXPORT SAVE FILE
+  </button>
+
+  <button class="action gray" onclick="$('importFile').click()">
+   IMPORT SAVE FILE
+  </button>
+
+  <input id="importFile" type="file" accept=".json"
+   style="display:none" onchange="importGame(event)">
+
+  <button class="action red" onclick="resetGame()">
+   RESET ALL PROGRESS
+  </button>
+
+  <button class="action" onclick="closeModal()">CLOSE</button>
+ `;
+ $("modal").style.display="flex";
+}
+
+function closeModal(){
+ $("modal").style.display="none";
+}
+
+function resetGame(){
+ if(!confirm("Delete all game progress?"))return;
+
+ localStorage.removeItem(CONFIG.SAVE_KEY);
+ state=createDefaultState();
+
+ saveGame();
+ closeModal();
+ renderAll();
+ notify("New life started!");
+}
+
+/* ==============================================
+   29. RANK SYSTEM
+============================================== */
+
+function getRank(){
+ const n=getNetWorth();
+
+ if(n>=10000000000)return "MEGA BILLIONAIRE";
+ if(n>=1000000000)return "BILLIONAIRE";
+ if(n>=500000000)return "BUSINESS TYCOON";
+ if(n>=100000000)return "MILLIONAIRE";
+ if(n>=10000000)return "WEALTHY CITIZEN";
+ if(n>=1000000)return "ENTREPRENEUR";
+ if(n>=500000)return "PROFESSIONAL";
+ return "BEGINNER";
+}
+
+/* ==============================================
+   30. START GAME
+============================================== */
+
+/* =====================================================
+   NEON LIFE V3 — REAL WORLD EXPANSION
+  
+========================================================= */
+
+// 1. DATA BARU + MIGRASI SAVE LAMA
+
+Object.assign(state, {
+ hygiene: state.hygiene ?? 100,
+ social: state.social ?? 50,
+ reputation: state.reputation ?? 0,
+ relationship: state.relationship ?? {},
+ playerX: state.playerX ?? 350,
+ playerY: state.playerY ?? 260,
+ currentPlace: state.currentPlace ?? "home",
+ phoneNotifications: state.phoneNotifications ?? [],
+ monthlyBills: state.monthlyBills ?? 0,
+ daysWithoutBath: state.daysWithoutBath ?? 0,
+ visitedPlaces: state.visitedPlaces ?? ["home"],
+});
+
+const V3_NPCS = [
+ {id:"andi",name:"Andi",job:"Office Worker",x:180,y:260,emoji:"👨",friend:0},
+ {id:"sarah",name:"Sarah",job:"Barista",x:510,y:260,emoji:"👩",friend:0},
+ {id:"budi",name:"Budi",job:"Student",x:600,y:300,emoji:"🧑",friend:0},
+ {id:"rani",name:"Rani",job:"Shop Owner",x:100,y:300,emoji:"👩‍💼",friend:0}
+];
+
+const V3_ACTIVITIES = [
+ {id:"bath",name:"Take a Shower",icon:"🚿",desc:"Improve hygiene.",place:"home"},
+ {id:"cook",name:"Cook a Meal",icon:"🍳",desc:"Prepare food at home.",place:"home"},
+ {id:"exercise",name:"Exercise",icon:"🏃",desc:"Improve health and fitness.",place:"park"},
+ {id:"watch",name:"Watch TV",icon:"📺",desc:"Relax at home.",place:"home"},
+ {id:"read",name:"Read a Book",icon:"📖",desc:"Improve intelligence.",place:"home"},
+ {id:"social",name:"Meet People",icon:"🗣️",desc:"Make new friends.",place:"city"},
+ {id:"shop",name:"Go Shopping",icon:"🛍️",desc:"Visit the market.",place:"market"},
+ {id:"study",name:"Study",icon:"🎓",desc:"Improve your knowledge.",place:"school"}
+];
+
+const V3_PLACES = {
+ home:{name:"Your Home",x:350,y:260,icon:"🏠"},
+ office:{name:"Office District",x:180,y:260,icon:"🏢"},
+ market:{name:"Supermarket",x:100,y:300,icon:"🛒"},
+ restaurant:{name:"Restaurant",x:510,y:260,icon:"🍽️"},
+ cafe:{name:"Coffee Shop",x:510,y:260,icon:"☕"},
+ school:{name:"University",x:600,y:300,icon:"🎓"},
+ tech:{name:"Technology Center",x:600,y:150,icon:"💻"},
+ bank:{name:"Neon Bank",x:350,y:120,icon:"🏦"},
+ park:{name:"City Park",x:350,y:300,icon:"🌳"},
+ city:{name:"City Center",x:350,y:260,icon:"🌆"}
+};
+
+let v3Moving = false;
+let v3Direction = "";
+let v3Animation = null;
+let v3LastMove = 0;
+
+// 2. TAMBAHKAN UI
+
+const v3Style = document.createElement("style");
+v3Style.textContent = `
+.v3-panel{background:#111a2b;border:1px solid #293951;border-radius:15px;padding:15px;margin-bottom:14px}
+.v3-title{font-size:14px;font-weight:900;margin-bottom:12px}
+.v3-controls{display:grid;grid-template-columns:repeat(3,55px);gap:6px;justify-content:center;margin:12px auto}
+.v3-controls button{height:48px;border:1px solid #36516c;background:#1a3048;color:white;border-radius:10px;font-size:19px}
+.v3-controls button:active{background:#168fc0}
+.v3-activity{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #293951}
+.v3-activity:last-child{border:0}
+.v3-activity-info{flex:1;min-width:0}
+.v3-activity-info b{font-size:11px}
+.v3-activity-info p{font-size:10px;color:#8796ad;margin-top:4px}
+.v3-npc{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #293951}
+.v3-phone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.v3-phone-grid button{border:1px solid #36516c;background:#1a3048;color:white;border-radius:12px;padding:15px 8px;font-size:11px;font-weight:800}
+.v3-phone-grid span{display:block;font-size:25px;margin-bottom:7px}
+.v3-meter{height:8px;background:#293951;border-radius:10px;overflow:hidden;margin-top:5px}
+.v3-meter div{height:100%;background:#36d9ff}
+`;
+document.head.appendChild(v3Style);
+
+const v3UI = document.createElement("div");
+v3UI.innerHTML = `
+<div class="v3-panel">
+ <div class="v3-title">🕹️ OPEN CITY — MOVEMENT</div>
+ <p class="muted">Berjalanlah menjelajahi kota. Gunakan tombol arah atau WASD.</p>
+ <div class="v3-controls">
+  <span></span><button onpointerdown="v3StartMove('up')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">⬆️</button><span></span>
+  <button onpointerdown="v3StartMove('left')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">⬅️</button>
+  <button onclick="v3Interact()">🔍</button>
+  <button onpointerdown="v3StartMove('right')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">➡️</button>
+  <span></span><button onpointerdown="v3StartMove('down')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">⬇️</button><span></span>
+ </div>
+ <div class="muted" id="v3Position">Location: Your Home</div>
+ <button class="action" onclick="v3OpenPhone()">📱 OPEN SMARTPHONE</button>
+</div>
+
+<div class="v3-panel">
+ <div class="v3-title">🧍 DAILY LIFE ACTIVITIES</div>
+ <div id="v3Activities"></div>
+</div>
+
+<div class="v3-panel">
+ <div class="v3-title">🤝 CITY RESIDENTS</div>
+ <div id="v3NPCs"></div>
+</div>
+
+<div class="v3-panel">
+ <div class="v3-title">🧼 PERSONAL CONDITION</div>
+ <div id="v3Needs"></div>
+</div>
+`;
+$("section-home").appendChild(v3UI);
+
+// 3. MOVEMENT SYSTEM
+
+function v3StartMove(direction){
+ if(state.working){
+  notify("You cannot walk while working!");
+  return;
+ }
+ v3Direction=direction;
+ v3Moving=true;
+ if(!v3Animation)v3Animation=requestAnimationFrame(v3MoveLoop);
+}
+
+function v3StopMove(){
+ v3Moving=false;
+ v3Direction="";
+}
+
+function v3MoveLoop(timestamp){
+ if(!v3Moving){
+  v3Animation=null;
+  return;
+ }
+
+ if(timestamp-v3LastMove>45){
+  const speed=5;
+  if(v3Direction==="up")state.playerY-=speed;
+  if(v3Direction==="down")state.playerY+=speed;
+  if(v3Direction==="left")state.playerX-=speed;
+  if(v3Direction==="right")state.playerX+=speed;
+
+  state.playerX=clamp(state.playerX,25,695);
+  state.playerY=clamp(state.playerY,180,350);
+
+  v3LastMove=timestamp;
+  drawWorld();
+  v3UpdatePosition();
+ }
+ v3Animation=requestAnimationFrame(v3MoveLoop);
+}
+
+document.addEventListener("keydown",e=>{
+ if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName))return;
+ const keys={w:"up",arrowup:"up",s:"down",arrowdown:"down",a:"left",arrowleft:"left",d:"right",arrowright:"right"};
+ const dir=keys[e.key.toLowerCase()];
+ if(dir){
+  e.preventDefault();
+  if(!v3Moving)v3StartMove(dir);
+ }
+});
+
+document.addEventListener("keyup",e=>{
+ if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(e.key.toLowerCase())){
+  v3StopMove();
+ }
+});
+
+function v3UpdatePosition(){
+ let nearest="City Street";
+ let distance=Infinity;
+
+ Object.entries(V3_PLACES).forEach(([id,p])=>{
+  const d=Math.hypot(state.playerX-p.x,state.playerY-p.y);
+  if(d<distance){
+   distance=d;
+   nearest=p.name;
+   state.currentPlace=id;
+  }
+ });
+
+ $("v3Position").textContent="Location: "+nearest;
+}
+
+// 4. INTERAKSI LOKASI
+
+function v3Interact(){
+ let nearest=null;
+ let distance=Infinity;
+
+ Object.entries(V3_PLACES).forEach(([id,p])=>{
+  const d=Math.hypot(state.playerX-p.x,state.playerY-p.y);
+  if(d<65&&d<distance){
+   nearest={id,...p};
+   distance=d;
+  }
+ });
+
+ if(!nearest){
+  notify("Tidak ada tempat menarik di dekatmu.");
+  return;
+ }
+
+ state.currentPlace=nearest.id;
+
+ if(!state.visitedPlaces.includes(nearest.id)){
+  state.visitedPlaces.push(nearest.id);
+  addXP(10);
+ }
+
+ notify("📍 Kamu berada di "+nearest.name);
+ log("Visited "+nearest.name);
+ v3UpdatePosition();
+ saveGame();
+}
+
+// 5. AKTIVITAS KEHIDUPAN
+
+function v3Activity(id){
+ const activity=V3_ACTIVITIES.find(a=>a.id===id);
+ if(!activity)return;
+
+ if(state.working){
+  notify("Selesaikan shift kerja terlebih dahulu.");
+  return;
+ }
+
+ const place=activity.place;
+ if(place!=="city"&&state.currentPlace!==place){
+  notify("Kamu harus berada di "+(V3_PLACES[place]?.name||place)+"!");
+  return;
+ }
+
+ switch(id){
+  case "bath":
+   state.hygiene=100;
+   state.daysWithoutBath=0;
+   state.happiness=clamp(state.happiness+5);
+   advanceTime(20);
+   break;
+
+  case "cook":
+   if(!spend(7000,"Cooking ingredients"))return;
+   state.hunger=clamp(state.hunger+55);
+   state.skills.cooking++;
+   advanceTime(40);
+   break;
+
+  case "exercise":
+   if(state.energy<20){
+    notify("Energi terlalu rendah untuk olahraga.");
+    return;
+   }
+   state.energy-=20;
+   state.health=clamp(state.health+8);
+   state.happiness=clamp(state.happiness+8);
+   advanceTime(45);
+   break;
+
+  case "watch":
+   state.happiness=clamp(state.happiness+18);
+   state.energy=clamp(state.energy-4);
+   advanceTime(60);
+   break;
+
+  case "read":
+   state.intelligence++;
+   state.skills.intelligence++;
+   addXP(20);
+   advanceTime(45);
+   break;
+
+  case "social":
+   state.social=clamp(state.social+10);
+   state.happiness=clamp(state.happiness+8);
+   advanceTime(30);
+   break;
+
+  case "shop":
+   navigate("shop",document.querySelectorAll(".nav button")[3]);
+   return;
+
+  case "study":
+   navigate("skills",document.querySelectorAll(".nav button")[2]);
+   studyAtHome();
+   return;
+ }
+
+ log("Completed activity: "+activity.name);
+ notify("✅ "+activity.name+" completed!");
+ renderAll();
+ saveGame();
+}
+
+function v3RenderActivities(){
+ $("v3Activities").innerHTML=V3_ACTIVITIES.map(a=>`
+  <div class="v3-activity">
+   <div style="font-size:24px">${a.icon}</div>
+   <div class="v3-activity-info">
+    <b>${a.name}</b>
+    <p>${a.desc}</p>
+   </div>
+   <button class="mini-btn blue" onclick="v3Activity('${a.id}')">DO</button>
+  </div>
+ `).join("");
+}
+
+// 6. NPC DAN HUBUNGAN SOSIAL
+
+function v3Talk(id){
+ const npc=V3_NPCS.find(n=>n.id===id);
+ if(!npc)return;
+
+ if(state.working){
+  notify("Kamu sedang bekerja.");
+  return;
+ }
+
+ const cost=5000;
+ if(state.money<cost){
+  notify("Butuh Rp5.000 untuk membeli minuman saat mengobrol.");
+  return;
+ }
+
+ spend(cost,"Social meeting");
+ npc.friend=Math.min(100,(npc.friend||0)+15);
+ state.relationship[id]=npc.friend;
+ state.social=clamp(state.social+15);
+ state.happiness=clamp(state.happiness+10);
+ state.reputation=clamp(state.reputation+1,0,100);
+ advanceTime(20);
+
+ log("Talked with "+npc.name);
+ notify("🤝 Hubungan dengan "+npc.name+" meningkat!");
+ renderAll();
+ saveGame();
+}
+
+function v3RenderNPCs(){
+ $("v3NPCs").innerHTML=V3_NPCS.map(n=>{
+  const friendship=state.relationship[n.id]??n.friend;
+  return `
+   <div class="v3-npc">
+    <div style="font-size:27px">${n.emoji}</div>
+    <div class="list-info">
+     <div class="list-name">${n.name}</div>
+     <div class="list-desc">${n.job} • Friendship ${friendship}/100</div>
+     <div class="v3-meter"><div style="width:${friendship}%"></div></div>
+    </div>
+    <button class="mini-btn" onclick="v3Talk('${n.id}')">TALK</button>
+   </div>
+  `;
+ }).join("");
+}
+
+// 7. SMARTPHONE
+
+function v3OpenPhone(){
+ $("modalContent").innerHTML=`
+  <h3>📱 NEON PHONE</h3>
+  <p>Selamat datang, ${escapeText(state.name)}. Pilih aplikasi.</p>
+  <div class="v3-phone-grid">
+   <button onclick="v3PhoneApp('bank')"><span>🏦</span>NEON BANK</button>
+   <button onclick="v3PhoneApp('map')"><span>🗺️</span>CITY MAP</button>
+   <button onclick="v3PhoneApp('calendar')"><span>📅</span>CALENDAR</button>
+   <button onclick="v3PhoneApp('news')"><span>📰</span>CITY NEWS</button>
+   <button onclick="v3PhoneApp('profile')"><span>👤</span>PROFILE</button>
+   <button onclick="v3PhoneApp('jobs')"><span>💼</span>JOB FINDER</button>
+  </div>
+  <button class="action" onclick="closeModal()">CLOSE PHONE</button>
+ `;
+ $("modal").style.display="flex";
+}
+
+function v3PhoneApp(app){
+ if(app==="bank"){
+  closeModal();
+  navigate("bank",document.querySelectorAll(".nav button")[6]);
+ }
+ if(app==="profile"){
+  closeModal();
+  navigate("profile",document.querySelectorAll(".nav button")[7]);
+ }
+ if(app==="jobs"){
+  closeModal();
+  navigate("career",document.querySelectorAll(".nav button")[1]);
+ }
+ if(app==="map"){
+  $("modalContent").innerHTML=`
+   <h3>🗺️ CITY MAP</h3>
+   ${Object.entries(V3_PLACES).map(([id,p])=>`
+    <div class="list-item">
+     <div class="list-icon">${p.icon}</div>
+     <div class="list-info"><b>${p.name}</b></div>
+     <button class="mini-btn" onclick="v3TravelTo('${id}')">GO</button>
+    </div>
+   `).join("")}
+   <button class="action" onclick="v3OpenPhone()">BACK</button>
+  `;
+ }
+ if(app==="calendar"){
+  $("modalContent").innerHTML=`
+   <h3>📅 LIFE CALENDAR</h3>
+   <p>Day ${state.day} • ${MONTHS[(state.month-1)%12]} ${state.year}</p>
+   <p>Current time: ${formatClock()}</p>
+   <p>Age: ${state.age}</p>
+   <p>Work shifts completed: ${state.totalWork}</p>
+   <button class="action" onclick="v3OpenPhone()">BACK</button>
+  `;
+ }
+ if(app==="news"){
+  $("modalContent").innerHTML=`
+   <h3>📰 NEON CITY NEWS</h3>
+   <div class="list-item"><div class="list-info"><b>City Update</b><p class="muted">The city is growing. New opportunities are waiting for you.</p></div></div>
+   <div class="list-item"><div class="list-info"><b>Economy</b><p class="muted">Local businesses continue to serve residents.</p></div></div>
+   <div class="list-item"><div class="list-info"><b>Community</b><p class="muted">Meet people and build relationships around town.</p></div></div>
+   <button class="action" onclick="v3OpenPhone()">BACK</button>
+  `;
+ }
+}
+
+function v3TravelTo(id){
+ const p=V3_PLACES[id];
+ if(!p)return;
+
+ const distance=Math.hypot(state.playerX-p.x,state.playerY-p.y);
+ const cost=Math.ceil(distance/100)*1000;
+
+ if(cost>0&&!spend(cost,"City transportation"))return;
+
+ state.playerX=p.x;
+ state.playerY=p.y;
+ state.currentPlace=id;
+
+ advanceTime(Math.max(5,Math.ceil(distance/10)));
+ closeModal();
+ v3UpdatePosition();
+ drawWorld();
+ notify("Arrived at "+p.name);
+ saveGame();
+}
+
+// 8. MONTHLY BILLS
+
+const v3OriginalNewDay=newDay;
+
+newDay=function(){
+ v3OriginalNewDay();
+
+ state.hygiene=clamp(state.hygiene-3);
+ state.social=clamp(state.social-1);
+ state.daysWithoutBath++;
+
+ if(state.day%30===1){
+  const bills=25000+getHouse().rent;
+  state.monthlyBills=bills;
+
+  if(state.money>=bills){
+   spend(bills,"Monthly electricity and water bills");
+   notify("🧾 Monthly bills paid: "+money(bills));
+  }else{
+   state.happiness=clamp(state.happiness-8);
+   log("Monthly bills are overdue.");
+   notify("⚠️ You have unpaid monthly bills!");
+  }
+ }
+};
+
+// 9. KONDISI KARAKTER BARU
+
+function v3RenderNeeds(){
+ const needs=[
+  {name:"Hygiene",value:state.hygiene,icon:"🧼"},
+  {name:"Social",value:state.social,icon:"🤝"},
+  {name:"Reputation",value:state.reputation,icon:"⭐"}
+ ];
+
+ $("v3Needs").innerHTML=needs.map(n=>`
+  <div style="margin:12px 0">
+   <div style="display:flex;justify-content:space-between;font-size:10px">
+    <b>${n.icon} ${n.name}</b><span>${Math.floor(n.value)}/100</span>
+   </div>
+   <div class="v3-meter"><div style="width:${n.value}%"></div></div>
+  </div>
+ `).join("")+`
+  <div class="muted">Days without shower: ${state.daysWithoutBath}</div>
+  <div class="muted">Monthly bills: ${money(state.monthlyBills)}</div>
+ `;
+}
+
+// 10. DUNIA KOTA BARU
+
+const v3OriginalDrawWorld=drawWorld;
+
+drawWorld=function(){
+ const w=canvas.width,h=canvas.height;
+ ctx.clearRect(0,0,w,h);
+
+ const gradient=ctx.createLinearGradient(0,0,0,h);
+ gradient.addColorStop(0,"#172b43");
+ gradient.addColorStop(1,"#315b57");
+ ctx.fillStyle=gradient;
+ ctx.fillRect(0,0,w,h);
+
+ // City blocks
+ const buildings=[
+  [20,45,110,130,"🏢"],[155,35,100,140,"🏬"],
+  [285,45,110,125,"🏦"],[425,35,110,140,"☕"],
+  [570,45,115,130,"🏙️"]
+ ];
+
+ buildings.forEach((b,i)=>{
+  ctx.fillStyle=["#233e5a","#294a61","#253c57","#34516a","#263d59"][i];
+  ctx.fillRect(b[0],b[1],b[2],b[3]);
+  ctx.fillStyle="#b9d9ef";
+  ctx.font="25px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(b[4],b[0]+b[2]/2,b[1]+55);
+
+  for(let x=b[0]+12;x<b[0]+b[2]-10;x+=23){
+   for(let y=b[1]+75;y<b[1]+b[3]-10;y+=23){
+    ctx.fillStyle=(x+y)%2?"#f7d98a":"#68c9e6";
+    ctx.fillRect(x,y,10,12);
+   }
+  }
+ });
+
+ // Park
+ ctx.fillStyle="#275b43";
+ ctx.fillRect(270,185,180,105);
+ for(let i=0;i<6;i++){
+  const x=285+i*29;
+  ctx.fillStyle="#175b42";
+  ctx.beginPath();
+  ctx.arc(x,220+(i%2)*25,15,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle="#765b3d";
+  ctx.fillRect(x-3,230+(i%2)*25,6,18);
+ }
+
+ // Roads
+ ctx.fillStyle="#293747";
+ ctx.fillRect(0,290,w,80);
+ ctx.fillRect(0,175,w,20);
+ ctx.fillStyle="#e8d58b";
+ ctx.setLineDash([22,18]);
+ ctx.lineWidth=3;
+ ctx.beginPath();
+ ctx.moveTo(0,330);
+ ctx.lineTo(w,330);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
+ // NPCs
+ V3_NPCS.forEach(n=>{
+  ctx.font="19px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(n.emoji,n.x,n.y);
+ });
+
+ // Player
+ ctx.fillStyle="#f1c29c";
+ ctx.beginPath();
+ ctx.arc(state.playerX,state.playerY-12,8,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="#36d9ff";
+ ctx.fillRect(state.playerX-8,state.playerY-4,16,18);
+
+ ctx.fillStyle="#172b43";
+ ctx.fillRect(state.playerX-7,state.playerY+14,5,9);
+ ctx.fillRect(state.playerX+2,state.playerY+14,5,9);
+
+ ctx.fillStyle="white";
+ ctx.font="bold 12px Arial";
+ ctx.textAlign="center";
+ ctx.fillText(state.name,state.playerX,state.playerY-28);
+
+ ctx.textAlign="left";
+ ctx.font="bold 17px Arial";
+ ctx.fillText("NEON CITY",15,25);
+ ctx.font="10px Arial";
+ ctx.fillStyle="#c0d9ed";
+ ctx.fillText("EXPLORE • WORK • LIVE",15,40);
+};
+
+// 11. RENDER HOOKS
+
+const v3OriginalRenderAll=renderAll;
+
+renderAll=function(){
+ v3OriginalRenderAll();
+ v3RenderActivities();
+ v3RenderNPCs();
+ v3RenderNeeds();
+ v3UpdatePosition();
+};
+
+// 12. SAVE TAMBAHAN
+
+const v3OriginalSave=saveGame;
+
+saveGame=function(){
+ v3OriginalSave();
+};
+
+// 13. ACHIEVEMENT TAMBAHAN
+
+ACHIEVEMENTS.push(
+ {id:"explorer",name:"City Explorer",desc:"Visit five different places.",check:()=>state.visitedPlaces.length>=5},
+ {id:"socialstar",name:"Social Star",desc:"Reach 100 social points.",check:()=>state.social>=100},
+ {id:"cleanlife",name:"Fresh Start",desc:"Maintain 100 hygiene.",check:()=>state.hygiene>=100}
+);
+
+// 14. KEYBOARD CLEANUP
+
+window.addEventListener("blur",v3StopMove);
+
+console.log("NEON LIFE V3 loaded successfully.");
+
+
+
+function initializeGame(){
+ log("Welcome to Neon Life!");
+ renderAll();
+ saveGame();
+
+ tickHandle=setInterval(clockTick,1000);
+
+ setInterval(saveGame,10000);
+
+ window.addEventListener("beforeunload",saveGame);
+}
+
+initializeGame();
+
+</script>
+<style>
+#homeButton {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 99999;
+  padding: 11px 17px;
+  border: 1px solid #38bdf8;
+  border-radius: 12px;
+  background: #101b2c;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 15px #0ea5e955;
+}
+#homeButton:hover {
+  background: #075985;
+}
+</style>
+
+<button id="homeButton" onclick="returnToHome()">
+  🏠 HOME
+</button>
+
+<script>
+function returnToHome() {
+  // Tutup semua panel atau halaman yang sedang terbuka
+  if (typeof navigateByName === "function") {
+    navigateByName("home");
+  }
+
+  // Kembalikan tampilan ke dashboard
+  if (typeof renderAll === "function") {
+    renderAll();
+  }
+
+  // Kembalikan posisi scroll ke atas
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+</script>
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+<script>
+const socket = io("https://GANTI-DENGAN-URL-RENDER");
+
+let onlinePlayers = {};
+
+socket.on("connect", () => {
+  console.log("Terhubung ke NEON LIFE ONLINE!");
+});
+
+socket.on("players", players => {
+  onlinePlayers = players;
+});
+
+socket.on("playerJoined", player => {
+  onlinePlayers[player.id] = player;
+});
+
+socket.on("playerMoved", player => {
+  onlinePlayers[player.id] = player;
+});
+
+socket.on("playerLeft", id => {
+  delete onlinePlayers[id];
+});
+
+function syncOnlinePlayer() {
+  if (!socket.connected) return;
+
+  socket.emit("updatePlayer", {
+    name: state.name,
+    x: state.playerX || 350,
+    y: state.playerY || 260,
+    place: state.currentPlace || "city"
+  });
+}
+
+setInterval(syncOnlinePlayer, 100);
+</script>
+</body>
+</html>
+
