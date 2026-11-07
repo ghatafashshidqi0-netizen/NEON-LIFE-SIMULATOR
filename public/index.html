@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -551,10 +550,6 @@ input{
 <script>
 "use strict";
 
-/* ==============================================
-   01. GAME CONFIGURATION
-============================================== */
-
 const CONFIG={
  SAVE_KEY:"neonLifeSimulatorV2",
  MINUTES_PER_REAL_SECOND:10,
@@ -564,10 +559,6 @@ const CONFIG={
  DAILY_FOOD_COST:10000,
  DAILY_TRANSPORT_COST:5000
 };
-
-/* ==============================================
-   02. JOB DATABASE
-============================================== */
 
 const JOBS=[
  {
@@ -712,10 +703,6 @@ const JOBS=[
  }
 ];
 
-/* ==============================================
-   03. SKILL DATABASE
-============================================== */
-
 const SKILLS=[
  {id:"communication",name:"Communication",icon:"🗣️",desc:"Improve social and customer skills."},
  {id:"cooking",name:"Cooking",icon:"👨‍🍳",desc:"Learn food preparation."},
@@ -724,10 +711,6 @@ const SKILLS=[
  {id:"creativity",name:"Creativity",icon:"🎨",desc:"Improve creative thinking."},
  {id:"intelligence",name:"Intelligence",icon:"🧠",desc:"Improve general knowledge."}
 ];
-
-/* ==============================================
-   04. SHOP DATABASE
-============================================== */
 
 const ITEMS=[
  {id:"bread",name:"Bread",icon:"🍞",price:5000,hunger:20,desc:"A simple food."},
@@ -740,10 +723,6 @@ const ITEMS=[
  {id:"phone",name:"Smartphone",icon:"📱",price:1200000,happy:10,desc:"Stay connected."},
  {id:"gaming",name:"Gaming Console",icon:"🎮",price:3500000,happy:30,desc:"Enjoy your free time."}
 ];
-
-/* ==============================================
-   05. PROPERTY DATABASE
-============================================== */
 
 const HOUSES=[
  {
@@ -798,10 +777,6 @@ const HOUSES=[
  }
 ];
 
-/* ==============================================
-   06. VEHICLE DATABASE
-============================================== */
-
 const VEHICLES=[
  {id:"walk",name:"Walking",icon:"🚶",price:0,owned:true,desc:"Free but slower."},
  {id:"bicycle",name:"Bicycle",icon:"🚲",price:750000,desc:"An affordable ride."},
@@ -809,10 +784,6 @@ const VEHICLES=[
  {id:"car",name:"Family Car",icon:"🚗",price:120000000,desc:"Comfortable transportation."},
  {id:"supercar",name:"Supercar",icon:"🏎️",price:1200000000,desc:"Luxury and speed."}
 ];
-
-/* ==============================================
-   07. BUSINESS DATABASE
-============================================== */
 
 const BUSINESSES=[
  {id:"stall",name:"Food Stall",icon:"🍜",price:1000000,income:25000,desc:"A small food business."},
@@ -822,10 +793,6 @@ const BUSINESSES=[
  {id:"restaurant",name:"Restaurant",icon:"🍽️",price:200000000,income:3500000,desc:"A successful restaurant."},
  {id:"company",name:"Technology Company",icon:"🏢",price:1000000000,income:20000000,desc:"A large technology business."}
 ];
-
-/* ==============================================
-   08. LOCATION DATABASE
-============================================== */
 
 const LOCATIONS=[
  {id:"home",name:"Your Home",icon:"🏠",desc:"Rest and recover.",action:"home"},
@@ -837,10 +804,6 @@ const LOCATIONS=[
  {id:"tech",name:"Technology Center",icon:"💻",desc:"Find technology jobs.",action:"career"},
  {id:"bank",name:"Neon Bank",icon:"🏦",desc:"Manage your savings.",action:"bank"}
 ];
-
-/* ==============================================
-   09. DEFAULT PLAYER DATA
-============================================== */
 
 function createDefaultState(){
  return {
@@ -895,16 +858,8 @@ let state=loadGame();
 let tickHandle=null;
 let toastHandle=null;
 
-/* ==============================================
-   10. UTILITIES
-============================================== */
-
 function $(id){
  return document.getElementById(id);
-}
-
-function clone(obj){
- return JSON.parse(JSON.stringify(obj));
 }
 
 function money(n){
@@ -922,10 +877,6 @@ function getHouse(){
 
 function getJob(){
  return JOBS.find(j=>j.id===state.job)||null;
-}
-
-function getVehicle(){
- return VEHICLES.find(v=>v.id===state.vehicle)||VEHICLES[0];
 }
 
 function notify(message){
@@ -961,10 +912,6 @@ function addXP(amount){
  }
 }
 
-/* ==============================================
-   11. SAVE SYSTEM
-============================================== */
-
 function loadGame(){
  try{
   const raw=localStorage.getItem(CONFIG.SAVE_KEY);
@@ -981,7 +928,6 @@ function loadGame(){
    businesses:{...base.businesses,...saved.businesses}
   };
  }catch(e){
-  console.warn("Save error",e);
   return createDefaultState();
  }
 }
@@ -1010,19 +956,11 @@ function importGame(event){
  if(!file)return;
 
  const reader=new FileReader();
-
  reader.onload=()=>{
   try{
    const imported=JSON.parse(reader.result);
-   if(typeof imported.money!=="number"||
-      !imported.skills||
-      !imported.inventory)throw Error("Invalid");
-
-   state={
-    ...createDefaultState(),
-    ...imported
-   };
-
+   if(typeof imported.money!=="number"||!imported.skills)throw Error("Invalid");
+   state={...createDefaultState(),...imported};
    saveGame();
    renderAll();
    closeModal();
@@ -1031,13 +969,8 @@ function importGame(event){
    notify("Invalid save file!");
   }
  };
-
  reader.readAsText(file);
 }
-
-/* ==============================================
-   12. MONEY SYSTEM
-============================================== */
 
 function earn(amount,description="Income"){
  amount=Math.max(0,Math.floor(amount));
@@ -1048,12 +981,10 @@ function earn(amount,description="Income"){
 
 function spend(amount,description="Expense"){
  amount=Math.floor(amount);
-
  if(amount<=0||state.money<amount){
   notify("Not enough money!");
   return false;
  }
-
  state.money-=amount;
  state.totalSpent+=amount;
  transaction("EXPENSE",amount,description);
@@ -1062,96 +993,60 @@ function spend(amount,description="Expense"){
 
 function getNetWorth(){
  let assets=state.money+state.bank;
-
  state.ownedHouses.forEach(id=>{
   const h=HOUSES.find(x=>x.id===id);
   if(h)assets+=h.price;
  });
-
  state.ownedVehicles.forEach(id=>{
   const v=VEHICLES.find(x=>x.id===id);
   if(v)assets+=v.price;
  });
-
  BUSINESSES.forEach(b=>{
   assets+=(state.businesses[b.id]||0)*b.price;
  });
-
  return assets;
 }
 
-/* ==============================================
-   13. TIME SYSTEM
-============================================== */
-
-const WEEKDAYS=[
- "MONDAY","TUESDAY","WEDNESDAY","THURSDAY",
- "FRIDAY","SATURDAY","SUNDAY"
-];
-
-const MONTHS=[
- "JANUARY","FEBRUARY","MARCH","APRIL",
- "MAY","JUNE","JULY","AUGUST",
- "SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"
-];
+const WEEKDAYS=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"];
+const MONTHS=["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
 
 function formatClock(){
  const h=Math.floor(state.minute/60)%24;
  const m=state.minute%60;
- return String(h).padStart(2,"0")+":"+
-        String(m).padStart(2,"0");
+ return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
 }
 
 function advanceTime(minutes){
  if(minutes<=0)return;
-
  let remaining=minutes;
-
  while(remaining>0){
   const step=Math.min(remaining,10);
   advanceNeeds(step);
   state.minute+=step;
   remaining-=step;
-
   if(state.minute>=1440){
    state.minute-=1440;
    newDay();
   }
  }
-
  renderAll();
  saveGame();
 }
 
 function advanceNeeds(minutes){
  const factor=minutes/60;
-
  state.hunger=clamp(state.hunger-1.4*factor);
  state.energy=clamp(state.energy-.4*factor);
  state.happiness=clamp(state.happiness-.12*factor);
-
- if(state.hunger<=0){
-  state.health=clamp(state.health-.8*factor);
- }
-
- if(state.energy<=0){
-  state.health=clamp(state.health-.5*factor);
- }
-
- if(state.health<=0){
-  state.health=1;
-  notify("⚠️ Your health is critically low!");
- }
+ if(state.hunger<=0)state.health=clamp(state.health-.8*factor);
+ if(state.energy<=0)state.health=clamp(state.health-.5*factor);
+ if(state.health<=0)state.health=1;
 }
 
 function newDay(){
  state.day++;
  state.totalDays++;
-
- if(state.day%7===1){
-  state.age++;
- }
-
+ if(state.day%7===1)state.age++;
  if(state.day%30===1){
   state.month++;
   if(state.month>12){
@@ -1159,25 +1054,18 @@ function newDay(){
    state.year++;
   }
  }
-
  if(state.day-state.lastDailyExpense>=1){
-  const expense=CONFIG.DAILY_FOOD_COST+
-   CONFIG.DAILY_TRANSPORT_COST;
-
+  const expense=CONFIG.DAILY_FOOD_COST+CONFIG.DAILY_TRANSPORT_COST;
   if(state.money>=expense){
    spend(expense,"Daily living expenses");
   }else{
    state.happiness=clamp(state.happiness-10);
    notify("⚠️ You cannot afford your daily expenses!");
   }
-
   state.lastDailyExpense=state.day;
  }
-
- // Weekly rent
  if(state.day-state.lastRentDay>=7){
   const rent=getHouse().rent;
-
   if(rent>0){
    if(state.money>=rent){
     spend(rent,"Weekly rent");
@@ -1187,32 +1075,20 @@ function newDay(){
     notify("⚠️ Your rent is overdue!");
    }
   }
-
   state.lastRentDay=state.day;
  }
-
- // Bank interest
  if(state.bank>0){
   const interest=Math.floor(state.bank*.001);
   state.bank+=interest;
   transaction("INTEREST",interest,"Bank interest");
  }
-
- // Passive business income
  let passive=0;
-
  BUSINESSES.forEach(b=>{
   passive+=(state.businesses[b.id]||0)*b.income;
  });
-
- if(passive>0){
-  earn(passive,"Business daily revenue");
- }
-
- // Recover small amount
+ if(passive>0)earn(passive,"Business daily revenue");
  state.energy=clamp(state.energy+8);
  state.hunger=clamp(state.hunger+5);
-
  log("A new day begins.");
  checkAchievements();
 }
@@ -1221,63 +1097,38 @@ function clockTick(){
  if(state.working){
   state.workProgress+=CONFIG.MINUTES_PER_REAL_SECOND;
   state.minute+=CONFIG.MINUTES_PER_REAL_SECOND;
-
   advanceNeeds(CONFIG.MINUTES_PER_REAL_SECOND);
-
   if(state.minute>=1440){
    state.minute-=1440;
    newDay();
   }
-
   if(state.workProgress>=CONFIG.WORK_DURATION){
    finishWork();
   }
  }else{
   advanceTime(CONFIG.MINUTES_PER_REAL_SECOND);
  }
-
  renderAll();
+ saveGame();
 }
-
-/* ==============================================
-   14. WORK SYSTEM
-============================================== */
 
 function canApply(job){
  if(job.skill!=="none"){
   if((state.skills[job.skill]||0)<job.requirement)return false;
  }
-
  if(job.education&&state.education<job.education)return false;
-
- if(job.vehicle&&!state.ownedVehicles.some(v=>v!=="walk")){
-  return false;
- }
-
+ if(job.vehicle&&!state.ownedVehicles.some(v=>v!=="walk"))return false;
  return true;
 }
 
 function applyJob(id){
  const job=JOBS.find(j=>j.id===id);
- if(!job)return;
-
- if(!canApply(job)){
-  notify("You do not meet the job requirements!");
-  return;
- }
-
- if(state.working){
-  notify("Finish your current shift first!");
-  return;
- }
-
+ if(!job||!canApply(job)||state.working)return;
  state.job=id;
  state.jobLevel=1;
  state.workProgress=0;
-
  log("Got a new job: "+job.name);
  addXP(20);
-
  notify("🎉 Congratulations! You are hired!");
  renderAll();
  saveGame();
@@ -1285,33 +1136,14 @@ function applyJob(id){
 
 function startWork(){
  const job=getJob();
-
- if(!job){
-  notify("Find a job first!");
+ if(!job||state.working||state.energy<35||state.hunger<15){
+  notify("Cannot start work right now!");
   return;
  }
-
- if(state.working){
-  notify("You are already working!");
-  return;
- }
-
- if(state.energy<35){
-  notify("You need more energy!");
-  return;
- }
-
- if(state.hunger<15){
-  notify("You need to eat first!");
-  return;
- }
-
  state.working=true;
  state.workProgress=0;
-
  log("Started work shift at "+job.name);
  notify("💼 Your shift has started!");
-
  renderAll();
  saveGame();
 }
@@ -1319,45 +1151,27 @@ function startWork(){
 function finishWork(){
  const job=getJob();
  if(!job)return;
-
  state.working=false;
-
- const bonus=Math.floor(
-  job.salary*
-  (1+state.jobLevel*.08)*
-  (state.happiness/100*.2+.8)
- );
-
+ const bonus=Math.floor(job.salary*(1+state.jobLevel*.08)*(state.happiness/100*.2+.8));
  earn(bonus,"Salary: "+job.name);
  state.totalWork++;
  state.jobLevel++;
  state.energy=clamp(state.energy-15);
-
  addXP(35);
  state.skills[job.skill]=(state.skills[job.skill]||0)+1;
- if(job.skill==="intelligence"){
-  state.intelligence++;
- }
-
+ if(job.skill==="intelligence")state.intelligence++;
  log("Finished shift. Received "+money(bonus));
  notify("💰 Salary received: "+money(bonus));
-
  checkAchievements();
  saveGame();
 }
 
 function quitJob(){
- if(state.working){
-  notify("Finish your shift before quitting!");
-  return;
- }
-
+ if(state.working)return;
  if(!state.job)return;
-
  const old=getJob();
  state.job=null;
  state.jobLevel=0;
-
  log("Quit job: "+old.name);
  notify("You left your job.");
  renderAll();
@@ -1366,9 +1180,7 @@ function quitJob(){
 
 function renderCareer(){
  const job=getJob();
-
- $("currentJob").innerHTML=job?
- `
+ $("currentJob").innerHTML=job?`
  <div class="card">
   <div class="card-icon">${job.icon}</div>
   <div class="card-name">${job.name}</div>
@@ -1376,8 +1188,7 @@ function renderCareer(){
   <div class="card-price">${money(job.salary)} base salary / shift</div>
   <button class="action red" onclick="quitJob()">QUIT THIS JOB</button>
  </div>
- `:
- `
+ `:`
  <div class="card">
   <div class="card-icon">🔎</div>
   <div class="card-name">Currently unemployed</div>
@@ -1388,7 +1199,6 @@ function renderCareer(){
  $("jobs").innerHTML=JOBS.map(j=>{
   const unlocked=canApply(j);
   const active=state.job===j.id;
-
   return `
   <div class="list-item">
    <div class="list-icon">${j.icon}</div>
@@ -1396,66 +1206,40 @@ function renderCareer(){
     <div class="list-name">${j.name}</div>
     <div class="list-desc">${j.desc}</div>
     <div class="card-price">${money(j.salary)} / shift</div>
-    <div class="muted">Skill: ${j.skill==="none"?"None":j.skill+" Lv."+j.requirement}
-     ${j.education?" • Education "+j.education:""}
-    </div>
+    <div class="muted">Skill: ${j.skill==="none"?"None":j.skill+" Lv."+j.requirement} ${j.education?" • Education "+j.education:""}</div>
    </div>
-   <button class="mini-btn" ${!unlocked||active||state.working?"disabled":""}
-    onclick="applyJob('${j.id}')">
+   <button class="mini-btn" ${!unlocked||active||state.working?"disabled":""} onclick="applyJob('${j.id}')">
     ${active?"HIRED":unlocked?"APPLY":"LOCKED"}
    </button>
   </div>`;
  }).join("");
 
  $("workButton").disabled=!job||state.working;
- $("workButton").textContent=state.working?
- "WORKING... "+Math.floor(state.workProgress/CONFIG.WORK_DURATION*100)+"%":
- "START WORK SHIFT";
+ $("workButton").textContent=state.working?"WORKING... "+Math.floor(state.workProgress/CONFIG.WORK_DURATION*100)+"%":"START WORK SHIFT";
 
- $("workStatus").innerHTML=state.working?
- `
+ $("workStatus").innerHTML=state.working?`
  <div class="card-name">💼 Working as ${job.name}</div>
  <div class="card-desc">Keep going! Your shift is in progress.</div>
  <div class="bar"><div class="cyan" style="width:${state.workProgress/CONFIG.WORK_DURATION*100}%"></div></div>
  <div class="muted" style="margin-top:8px">${Math.floor(state.workProgress)} / 480 minutes</div>
- `:
- `
+ `:`
  <div class="card-name">${job?"Ready for your next shift.":"You are currently free."}</div>
  <div class="card-desc">${job?"Go to work to earn your salary.":"Choose a job to start your career."}</div>
  `;
 }
 
-/* ==============================================
-   15. SKILL SYSTEM
-============================================== */
-
 function trainSkill(id){
  const skill=SKILLS.find(s=>s.id===id);
  if(!skill)return;
-
  const level=state.skills[id]||0;
  const cost=(level+1)*30000;
- const energyCost=18;
-
- if(state.money<cost){
-  notify("Not enough money for training!");
-  return;
- }
-
- if(state.energy<energyCost){
-  notify("Not enough energy!");
-  return;
- }
-
+ if(state.money<cost||state.energy<18)return;
  if(!spend(cost,"Skill training"))return;
-
- state.energy-=energyCost;
+ state.energy-=18;
  state.skills[id]++;
  addXP(25);
-
  log("Improved skill: "+skill.name);
  notify("🎓 "+skill.name+" improved!");
-
  renderAll();
  saveGame();
 }
@@ -1464,7 +1248,6 @@ function renderSkills(){
  $("skills").innerHTML=SKILLS.map(s=>{
   const lv=state.skills[s.id]||0;
   const cost=(lv+1)*30000;
-
   return `
   <div class="list-item">
    <div class="list-icon">${s.icon}</div>
@@ -1473,8 +1256,7 @@ function renderSkills(){
     <div class="list-desc">${s.desc}</div>
     <div class="bar"><div class="purplebar" style="width:${Math.min(lv*10,100)}%"></div></div>
    </div>
-   <button class="mini-btn" ${state.money<cost||state.energy<18?"disabled":""}
-    onclick="trainSkill('${s.id}')">${money(cost)}</button>
+   <button class="mini-btn" ${state.money<cost||state.energy<18?"disabled":""} onclick="trainSkill('${s.id}')">${money(cost)}</button>
   </div>`;
  }).join("");
 
@@ -1493,8 +1275,7 @@ function renderSkills(){
    <div class="list-name">${c.name}</div>
    <div class="list-desc">Education level ${c.level}</div>
   </div>
-  <button class="mini-btn" ${state.education>=c.level||state.money<c.price?"disabled":""}
-   onclick="buyEducation(${c.level},${c.price})">
+  <button class="mini-btn" ${state.education>=c.level||state.money<c.price?"disabled":""} onclick="buyEducation(${c.level},${c.price})">
    ${state.education>=c.level?"DONE":money(c.price)}
   </button>
  </div>
@@ -1502,72 +1283,42 @@ function renderSkills(){
 }
 
 function buyEducation(level,cost){
- if(level!==state.education+1){
-  notify("Complete previous education first!");
-  return;
- }
-
- if(state.energy<30){
-  notify("You need more energy!");
-  return;
- }
-
+ if(level!==state.education+1||state.energy<30)return;
  if(!spend(cost,"Education course"))return;
-
  state.energy-=30;
  state.education=level;
  state.skills.intelligence++;
  state.intelligence++;
  addXP(100);
-
  log("Completed education level "+level);
  notify("🎓 Education completed!");
-
  renderAll();
  saveGame();
 }
 
-/* ==============================================
-   16. SHOP SYSTEM
-============================================== */
-
 function buyItem(id){
  const item=ITEMS.find(x=>x.id===id);
- if(!item)return;
-
- if(!spend(item.price,"Purchased "+item.name))return;
-
+ if(!item||!spend(item.price,"Purchased "+item.name))return;
  state.inventory[id]=(state.inventory[id]||0)+1;
-
  log("Purchased "+item.name);
  notify("Purchased "+item.name);
-
  renderAll();
  saveGame();
 }
 
 function useItem(id){
  const item=ITEMS.find(x=>x.id===id);
- if(!item)return;
-
- if(!state.inventory[id]||state.inventory[id]<=0){
-  return;
- }
-
+ if(!item||!state.inventory[id])return;
  state.inventory[id]--;
-
  if(item.hunger)state.hunger=clamp(state.hunger+item.hunger);
  if(item.energy)state.energy=clamp(state.energy+item.energy);
  if(item.happy)state.happiness=clamp(state.happiness+item.happy);
-
  if(item.skill){
   state.skills[item.skill]++;
   if(item.skill==="programming")state.intelligence++;
  }
-
  log("Used item: "+item.name);
  notify("Item used!");
-
  renderAll();
  saveGame();
 }
@@ -1579,15 +1330,13 @@ function renderShop(){
   <div class="card-name">${item.name}</div>
   <div class="card-desc">${item.desc}</div>
   <div class="card-price">${money(item.price)}</div>
-  <button class="action" ${state.money<item.price?"disabled":""}
-   onclick="buyItem('${item.id}')">BUY ITEM</button>
+  <button class="action" ${state.money<item.price?"disabled":""} onclick="buyItem('${item.id}')">BUY ITEM</button>
  </div>
  `).join("");
 
  $("inventory").innerHTML=ITEMS.map(item=>{
   const count=state.inventory[item.id]||0;
   if(count<=0)return "";
-
   return `
   <div class="list-item">
    <div class="list-icon">${item.icon}</div>
@@ -1600,14 +1349,9 @@ function renderShop(){
  }).join("")||'<div class="muted">Your inventory is empty.</div>';
 }
 
-/* ==============================================
-   17. PROPERTY SYSTEM
-============================================== */
-
 function buyHouse(id){
  const house=HOUSES.find(h=>h.id===id);
  if(!house)return;
-
  if(state.ownedHouses.includes(id)){
   state.house=id;
   notify("🏠 New home selected!");
@@ -1615,15 +1359,11 @@ function buyHouse(id){
   saveGame();
   return;
  }
-
  if(!spend(house.price,"Purchased property: "+house.name))return;
-
  state.ownedHouses.push(id);
  state.house=id;
-
  log("Purchased property "+house.name);
  notify("🏡 Property purchased!");
-
  renderAll();
  saveGame();
 }
@@ -1631,7 +1371,6 @@ function buyHouse(id){
 function buyVehicle(id){
  const v=VEHICLES.find(x=>x.id===id);
  if(!v)return;
-
  if(state.ownedVehicles.includes(id)){
   state.vehicle=id;
   notify("Vehicle selected!");
@@ -1639,15 +1378,11 @@ function buyVehicle(id){
   saveGame();
   return;
  }
-
  if(!spend(v.price,"Purchased vehicle: "+v.name))return;
-
  state.ownedVehicles.push(id);
  state.vehicle=id;
-
  log("Purchased vehicle "+v.name);
  notify("🚗 Vehicle purchased!");
-
  renderAll();
  saveGame();
 }
@@ -1656,7 +1391,6 @@ function renderProperty(){
  $("houses").innerHTML=HOUSES.map(h=>{
   const owned=state.ownedHouses.includes(h.id);
   const selected=state.house===h.id;
-
   return `
   <div class="card">
    <div class="card-icon">${h.icon}</div>
@@ -1664,9 +1398,7 @@ function renderProperty(){
    <div class="card-desc">${h.desc}</div>
    <div class="card-price">${h.price?money(h.price):"STARTER HOME"}</div>
    <div class="muted">Rent: ${h.rent?money(h.rent)+"/week":"No rent"}</div>
-   <button class="action ${selected?"gray":"green"}"
-    ${!owned&&state.money<h.price?"disabled":""}
-    onclick="buyHouse('${h.id}')">
+   <button class="action ${selected?"gray":"green"}" ${!owned&&state.money<h.price?"disabled":""} onclick="buyHouse('${h.id}')">
     ${selected?"CURRENT HOME":owned?"MOVE IN":"BUY PROPERTY"}
    </button>
   </div>`;
@@ -1674,7 +1406,6 @@ function renderProperty(){
 
  $("vehicles").innerHTML=VEHICLES.map(v=>{
   const owned=state.ownedVehicles.includes(v.id);
-
   return `
   <div class="list-item">
    <div class="list-icon">${v.icon}</div>
@@ -1683,30 +1414,20 @@ function renderProperty(){
     <div class="list-desc">${v.desc}</div>
     <div class="card-price">${v.price?money(v.price):"FREE"}</div>
    </div>
-   <button class="mini-btn" ${!owned&&state.money<v.price?"disabled":""}
-    onclick="buyVehicle('${v.id}')">
+   <button class="mini-btn" ${!owned&&state.money<v.price?"disabled":""} onclick="buyVehicle('${v.id}')">
     ${state.vehicle===v.id?"ACTIVE":owned?"SELECT":"BUY"}
    </button>
   </div>`;
  }).join("");
 }
 
-/* ==============================================
-   18. BUSINESS SYSTEM
-============================================== */
-
 function buyBusiness(id){
  const b=BUSINESSES.find(x=>x.id===id);
- if(!b)return;
-
- if(!spend(b.price,"Business investment: "+b.name))return;
-
+ if(!b||!spend(b.price,"Business investment: "+b.name))return;
  state.businesses[id]=(state.businesses[id]||0)+1;
  state.happiness=clamp(state.happiness+5);
-
  log("Started business: "+b.name);
  notify("🏢 Business acquired!");
-
  renderAll();
  saveGame();
 }
@@ -1714,7 +1435,6 @@ function buyBusiness(id){
 function renderBusiness(){
  $("businesses").innerHTML=BUSINESSES.map(b=>{
   const count=state.businesses[b.id]||0;
-
   return `
   <div class="list-item">
    <div class="list-icon">${b.icon}</div>
@@ -1724,74 +1444,45 @@ function renderBusiness(){
     <div class="card-price">+${money(b.income)}/day per business</div>
     <div class="muted">Purchase: ${money(b.price)}</div>
    </div>
-   <button class="mini-btn" ${state.money<b.price?"disabled":""}
-    onclick="buyBusiness('${b.id}')">INVEST</button>
+   <button class="mini-btn" ${state.money<b.price?"disabled":""} onclick="buyBusiness('${b.id}')">INVEST</button>
   </div>`;
  }).join("");
 
- let count=0;
- let income=0;
-
+ let count=0,income=0;
  BUSINESSES.forEach(b=>{
   count+=state.businesses[b.id]||0;
   income+=(state.businesses[b.id]||0)*b.income;
  });
 
  $("businessStats").innerHTML=`
-  <div class="list-item">
-   <div class="list-info">Total businesses owned</div>
-   <b>${count}</b>
-  </div>
-  <div class="list-item">
-   <div class="list-info">Daily passive income</div>
-   <b style="color:var(--green)">${money(income)}</b>
-  </div>
+  <div class="list-item"><div class="list-info">Total businesses owned</div><b>${count}</b></div>
+  <div class="list-item"><div class="list-info">Daily passive income</div><b style="color:var(--green)">${money(income)}</b></div>
  `;
 }
 
-/* ==============================================
-   19. BANKING SYSTEM
-============================================== */
-
 function deposit(){
  const amount=Math.floor(Number($("bankAmount").value));
-
- if(!Number.isFinite(amount)||amount<=0){
-  notify("Enter a valid amount!");
-  return;
- }
-
- if(!spend(amount,"Bank deposit"))return;
-
+ if(!Number.isFinite(amount)||amount<=0||!spend(amount,"Bank deposit"))return;
  state.bank+=amount;
  transaction("DEPOSIT",amount,"Money deposited");
  notify("🏦 Deposit successful!");
-
  renderAll();
  saveGame();
 }
 
 function withdraw(){
  const amount=Math.floor(Number($("bankAmount").value));
-
- if(!Number.isFinite(amount)||amount<=0||amount>state.bank){
-  notify("Invalid withdrawal amount!");
-  return;
- }
-
+ if(!Number.isFinite(amount)||amount<=0||amount>state.bank)return;
  state.bank-=amount;
  state.money+=amount;
-
  transaction("WITHDRAW",amount,"Money withdrawn");
  notify("Withdrawal successful!");
-
  renderAll();
  saveGame();
 }
 
 function renderBank(){
  $("bankBalance").textContent=money(state.bank);
-
  $("transactions").innerHTML=state.transactions.map(t=>`
  <div>
   ${t.type==="INCOME"||t.type==="INTEREST"?"🟢":"🔴"}
@@ -1801,132 +1492,51 @@ function renderBank(){
  `).join("")||"No transactions yet.";
 }
 
-/* ==============================================
-   20. LOCATIONS
-============================================== */
-
 function goLocation(id){
  const loc=LOCATIONS.find(l=>l.id===id);
- if(!loc)return;
-
- if(state.working){
-  notify("You cannot leave during a work shift!");
-  return;
- }
-
+ if(!loc||state.working)return;
  if(id!=="home"){
-  const travelCost=state.vehicle==="walk"?0:
-   state.vehicle==="bicycle"?1000:
-   state.vehicle==="motorcycle"?3000:
-   state.vehicle==="car"?5000:8000;
-
+  const travelCost=state.vehicle==="walk"?0:state.vehicle==="bicycle"?1000:state.vehicle==="motorcycle"?3000:state.vehicle==="car"?5000:8000;
   if(travelCost>0&&!spend(travelCost,"Transportation"))return;
-
   advanceTime(20);
  }
-
- if(id==="home"){
-  notify("You are at home.");
- }else{
-  notify("📍 Arrived at "+loc.name);
- }
-
  navigateByName(loc.action);
 }
 
 function navigateByName(name){
  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
  $("section-"+name).classList.add("active");
-
  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
- const index={
-  home:0,career:1,skills:2,shop:3,
-  property:4,business:5,bank:6,profile:7
- }[name];
-
- if(index!==undefined){
-  document.querySelectorAll(".nav button")[index].classList.add("active");
- }
-}
-
-/* ==============================================
-   21. FOOD & REST
-============================================== */
-
-function eatMeal(){
- if(!spend(12000,"Restaurant meal"))return;
-
- state.hunger=clamp(state.hunger+50);
- state.happiness=clamp(state.happiness+8);
-
- advanceTime(30);
- notify("🍽️ You enjoyed a meal!");
-
- renderAll();
- saveGame();
+ const index={home:0,career:1,skills:2,shop:3,property:4,business:5,bank:6,profile:7}[name];
+ if(index!==undefined)document.querySelectorAll(".nav button")[index].classList.add("active");
 }
 
 function sleep(){
- if(state.working){
-  notify("You cannot sleep while working!");
-  return;
- }
-
+ if(state.working)return;
  const hour=Math.floor(state.minute/60);
  let hours=hour>=22?8:hour>=18?10:8;
-
  state.energy=clamp(state.energy+hours*12*getHouse().recovery);
  state.health=clamp(state.health+hours*2);
  state.happiness=clamp(state.happiness+5);
-
  advanceTime(hours*60);
-
  notify("🌙 You rested and recovered.");
  renderAll();
  saveGame();
 }
 
-/* ==============================================
-   22. DAILY ACTIVITIES
-============================================== */
-
 function studyAtHome(){
- if(state.energy<15){
-  notify("You need more energy!");
-  return;
- }
-
+ if(state.energy<15)return;
  state.energy-=15;
  state.skills.intelligence++;
  state.intelligence++;
  state.happiness=clamp(state.happiness-2);
-
  advanceTime(60);
  addXP(15);
-
  log("Studied independently.");
  notify("📚 You learned something new!");
-
  renderAll();
  saveGame();
 }
-
-function relax(){
- if(state.working)return;
-
- state.happiness=clamp(state.happiness+20);
- state.energy=clamp(state.energy-5);
-
- advanceTime(60);
-
- notify("😊 You feel better!");
- renderAll();
- saveGame();
-}
-
-/* ==============================================
-   23. ACHIEVEMENTS
-============================================== */
 
 const ACHIEVEMENTS=[
  {id:"firstjob",name:"First Employment",desc:"Get your first job.",check:()=>state.totalWork>0},
@@ -1936,7 +1546,10 @@ const ACHIEVEMENTS=[
  {id:"business",name:"Entrepreneur",desc:"Own your first business.",check:()=>Object.values(state.businesses).some(v=>v>0)},
  {id:"education",name:"Graduate",desc:"Complete level 3 education.",check:()=>state.education>=3},
  {id:"home",name:"Homeowner",desc:"Buy a house.",check:()=>state.ownedHouses.includes("house")},
- {id:"vehicle",name:"Driver",desc:"Own a car.",check:()=>state.ownedVehicles.includes("car")}
+ {id:"vehicle",name:"Driver",desc:"Own a car.",check:()=>state.ownedVehicles.includes("car")},
+ {id:"explorer",name:"City Explorer",desc:"Visit five different places.",check:()=>state.visitedPlaces.length>=5},
+ {id:"socialstar",name:"Social Star",desc:"Reach 100 social points.",check:()=>state.social>=100},
+ {id:"cleanlife",name:"Fresh Start",desc:"Maintain 100 hygiene.",check:()=>state.hygiene>=100}
 ];
 
 function checkAchievements(){
@@ -1953,7 +1566,6 @@ function checkAchievements(){
 function renderAchievements(){
  $("achievements").innerHTML=ACHIEVEMENTS.map(a=>{
   const unlocked=state.achievements.includes(a.id);
-
   return `
   <div class="list-item">
    <div class="list-icon">${unlocked?"🏆":"🔒"}</div>
@@ -1966,14 +1578,9 @@ function renderAchievements(){
  }).join("");
 }
 
-/* ==============================================
-   24. PROFILE
-============================================== */
-
 function changeName(){
  const name=prompt("Enter your character name:",state.name);
  if(!name||!name.trim())return;
-
  state.name=name.trim().slice(0,24);
  notify("Character name updated!");
  renderAll();
@@ -1982,9 +1589,7 @@ function changeName(){
 
 function renderProfile(){
  $("profileName").textContent=state.name;
- $("profileDetails").textContent=
-  "Age "+state.age+" • "+state.year+" • "+getRank();
-
+ $("profileDetails").textContent="Age "+state.age+" • "+state.year+" • "+getRank();
  $("statistics").innerHTML=`
   <div class="list-item"><div class="list-info">Lifetime earnings</div><b>${money(state.totalIncome)}</b></div>
   <div class="list-item"><div class="list-info">Total spending</div><b>${money(state.totalSpent)}</b></div>
@@ -1996,305 +1601,23 @@ function renderProfile(){
  `;
 }
 
-/* ==============================================
-   25. CITY WORLD CANVAS
-============================================== */
-
 const canvas=$("worldCanvas");
 const ctx=canvas.getContext("2d");
 
-function drawWorld(){
- const w=canvas.width;
- const h=canvas.height;
-
- ctx.clearRect(0,0,w,h);
-
- const sky=ctx.createLinearGradient(0,0,0,h);
- sky.addColorStop(0,"#101b39");
- sky.addColorStop(1,"#274c60");
-
- ctx.fillStyle=sky;
- ctx.fillRect(0,0,w,h);
-
- // Stars
- for(let i=0;i<60;i++){
-  ctx.fillStyle=i%2?"#7cb9db":"#d7efff";
-  ctx.fillRect((i*137)%w,(i*53)%160,2,2);
- }
-
- // Moon
- ctx.fillStyle="#e3eaff";
- ctx.beginPath();
- ctx.arc(620,50,23,0,Math.PI*2);
- ctx.fill();
-
- // Background buildings
- const buildings=[
-  [20,100,70,170],[105,65,90,205],
-  [220,115,70,155],[310,45,95,225],
-  [425,105,75,165],[520,75,75,195],
-  [615,120,80,150]
- ];
-
- buildings.forEach((b,i)=>{
-  ctx.fillStyle=i%2?"#182c49":"#203652";
-  ctx.fillRect(b[0],b[1],b[2],b[3]);
-
-  for(let x=b[0]+10;x<b[0]+b[2]-5;x+=18){
-   for(let y=b[1]+15;y<b[1]+b[3]-10;y+=22){
-    ctx.fillStyle=(x+y)%3?"#f3cb72":"#5bc8e7";
-    ctx.fillRect(x,y,8,11);
-   }
-  }
- });
-
- // Ground
- ctx.fillStyle="#263e43";
- ctx.fillRect(0,275,w,95);
-
- // Street
- ctx.fillStyle="#263343";
- ctx.fillRect(0,310,w,60);
-
- ctx.strokeStyle="#d5c47d";
- ctx.setLineDash([20,18]);
- ctx.lineWidth=3;
- ctx.beginPath();
- ctx.moveTo(0,340);
- ctx.lineTo(w,340);
- ctx.stroke();
- ctx.setLineDash([]);
-
- // Player character
- const px=350;
- const py=260;
-
- ctx.fillStyle="#f0bd90";
- ctx.fillRect(px-7,py-27,14,15);
-
- ctx.fillStyle="#243c70";
- ctx.fillRect(px-10,py-12,20,24);
-
- ctx.fillStyle="#263c58";
- ctx.fillRect(px-9,py+12,7,15);
- ctx.fillRect(px+2,py+12,7,15);
-
- ctx.fillStyle="#e9f2ff";
- ctx.font="bold 12px Arial";
- ctx.textAlign="center";
- ctx.fillText(state.name,px,py-36);
-
- // City label
- ctx.textAlign="left";
- ctx.font="bold 18px Arial";
- ctx.fillText("NEON CITY",18,28);
-
- ctx.font="11px Arial";
- ctx.fillStyle="#9dc8e7";
- ctx.fillText("BUILD YOUR FUTURE",18,44);
-}
-
 /* ==============================================
-   26. LOCATIONS RENDER
+   V3 EXPANSION & MULTIPLAYER SETUP
 ============================================== */
 
-function renderLocations(){
- $("locations").innerHTML=LOCATIONS.map(l=>`
-  <button class="location ${l.id==="home"?"selected":""}"
-   onclick="goLocation('${l.id}')">
-   <div class="emoji">${l.icon}</div>
-   <div class="locname">${l.name}</div>
-   <div class="locdesc">${l.desc}</div>
-  </button>
- `).join("");
-}
-
-/* ==============================================
-   27. UI RENDERING
-============================================== */
-
-function renderStats(){
- $("money").textContent=money(state.money);
- $("career").textContent=getJob()?.name||"Unemployed";
- $("careerLevel").textContent="Career level "+state.jobLevel;
- $("level").textContent=state.level;
- $("xpText").textContent=state.xp+" / "+(state.level*100)+" XP";
- $("networth").textContent=money(getNetWorth());
-
- $("clock").textContent=
-  "DAY "+state.day+" • "+formatClock();
-
- $("worldDate").textContent=
-  WEEKDAYS[(state.day-1)%7]+" • DAY "+state.day;
-
- $("currentLocation").textContent=
-  "🏠 "+getHouse().name;
-
- $("energyBar").style.width=state.energy+"%";
- $("hungerBar").style.width=state.hunger+"%";
- $("healthBar").style.width=state.health+"%";
- $("happyBar").style.width=state.happiness+"%";
- $("intBar").style.width=Math.min(state.intelligence*10,100)+"%";
-
- $("energyText").textContent=Math.floor(state.energy);
- $("hungerText").textContent=Math.floor(state.hunger);
- $("healthText").textContent=Math.floor(state.health);
- $("happyText").textContent=Math.floor(state.happiness);
- $("intText").textContent=state.intelligence;
-
- $("rentText").textContent=getHouse().rent?
-  money(getHouse().rent)+" / week":"No rent";
-
- $("advice").textContent=
-  state.energy<25?"You need to rest before working.":
-  state.hunger<25?"Find some food before your energy drops.":
-  !state.job?"Find a job to start earning your first salary.":
-  state.skills.programming<5?"Consider learning programming for better career opportunities.":
-  "Keep developing your skills and building your wealth.";
-
- $("schedule").innerHTML=`
-  <div class="card-name">${formatClock()}</div>
-  <div class="card-desc">
-   ${state.working?"Currently working.":
-     state.energy<30?"You are exhausted.":
-     state.hunger<25?"You should find food.":
-     "You have free time."}
-  </div>
- `;
-}
-
-function renderLogs(){
- $("logs").innerHTML=state.logs.map(x=>`
-  <div>${escapeText(x)}</div>
- `).join("")||"Your life journey starts here.";
-}
-
-function escapeText(s){
- return String(s).replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  '"':"&quot;","'":"&#39;"
- })[c]);
-}
-
-function renderAll(){
- renderStats();
- renderCareer();
- renderSkills();
- renderShop();
- renderProperty();
- renderBusiness();
- renderBank();
- renderProfile();
- renderAchievements();
- renderLocations();
- renderLogs();
- drawWorld();
-}
-
-/* ==============================================
-   28. NAVIGATION
-============================================== */
-
-function navigate(name,button){
- document.querySelectorAll(".section").forEach(s=>{
-  s.classList.remove("active");
- });
-
- $("section-"+name).classList.add("active");
-
- document.querySelectorAll(".nav button").forEach(b=>{
-  b.classList.remove("active");
- });
-
- button.classList.add("active");
-}
-
-function openSettings(){
- $("modalContent").innerHTML=`
-  <h3>⚙️ GAME SETTINGS</h3>
-  <p>Manage your progress and game data.</p>
-
-  <button class="action green" onclick="saveGame();notify('Game saved!');closeModal()">
-   SAVE GAME
-  </button>
-
-  <button class="action gray" onclick="exportGame()">
-   EXPORT SAVE FILE
-  </button>
-
-  <button class="action gray" onclick="$('importFile').click()">
-   IMPORT SAVE FILE
-  </button>
-
-  <input id="importFile" type="file" accept=".json"
-   style="display:none" onchange="importGame(event)">
-
-  <button class="action red" onclick="resetGame()">
-   RESET ALL PROGRESS
-  </button>
-
-  <button class="action" onclick="closeModal()">CLOSE</button>
- `;
- $("modal").style.display="flex";
-}
-
-function closeModal(){
- $("modal").style.display="none";
-}
-
-function resetGame(){
- if(!confirm("Delete all game progress?"))return;
-
- localStorage.removeItem(CONFIG.SAVE_KEY);
- state=createDefaultState();
-
- saveGame();
- closeModal();
- renderAll();
- notify("New life started!");
-}
-
-/* ==============================================
-   29. RANK SYSTEM
-============================================== */
-
-function getRank(){
- const n=getNetWorth();
-
- if(n>=10000000000)return "MEGA BILLIONAIRE";
- if(n>=1000000000)return "BILLIONAIRE";
- if(n>=500000000)return "BUSINESS TYCOON";
- if(n>=100000000)return "MILLIONAIRE";
- if(n>=10000000)return "WEALTHY CITIZEN";
- if(n>=1000000)return "ENTREPRENEUR";
- if(n>=500000)return "PROFESSIONAL";
- return "BEGINNER";
-}
-
-/* ==============================================
-   30. START GAME
-============================================== */
-
-/* =====================================================
-   NEON LIFE V3 — REAL WORLD EXPANSION
-  
-========================================================= */
-
-// 1. DATA BARU + MIGRASI SAVE LAMA
-
-Object.assign(state, {
- hygiene: state.hygiene ?? 100,
- social: state.social ?? 50,
- reputation: state.reputation ?? 0,
- relationship: state.relationship ?? {},
- playerX: state.playerX ?? 350,
- playerY: state.playerY ?? 260,
- currentPlace: state.currentPlace ?? "home",
- phoneNotifications: state.phoneNotifications ?? [],
- monthlyBills: state.monthlyBills ?? 0,
- daysWithoutBath: state.daysWithoutBath ?? 0,
- visitedPlaces: state.visitedPlaces ?? ["home"],
-});
+state.hygiene = state.hygiene ?? 100;
+state.social = state.social ?? 50;
+state.reputation = state.reputation ?? 0;
+state.relationship = state.relationship ?? {};
+state.playerX = state.playerX ?? 350;
+state.playerY = state.playerY ?? 260;
+state.currentPlace = state.currentPlace ?? "home";
+state.visitedPlaces = state.visitedPlaces ?? ["home"];
+state.daysWithoutBath = state.daysWithoutBath ?? 0;
+state.monthlyBills = state.monthlyBills ?? 0;
 
 const V3_NPCS = [
  {id:"andi",name:"Andi",job:"Office Worker",x:180,y:260,emoji:"👨",friend:0},
@@ -2327,12 +1650,7 @@ const V3_PLACES = {
  city:{name:"City Center",x:350,y:260,icon:"🌆"}
 };
 
-let v3Moving = false;
-let v3Direction = "";
-let v3Animation = null;
-let v3LastMove = 0;
-
-// 2. TAMBAHKAN UI
+let v3Moving=false, v3Direction="", v3Animation=null, v3LastMove=0;
 
 const v3Style = document.createElement("style");
 v3Style.textContent = `
@@ -2359,7 +1677,7 @@ const v3UI = document.createElement("div");
 v3UI.innerHTML = `
 <div class="v3-panel">
  <div class="v3-title">🕹️ OPEN CITY — MOVEMENT</div>
- <p class="muted">Berjalanlah menjelajahi kota. Gunakan tombol arah atau WASD.</p>
+ <p class="muted">Jelajahi kota secara online bersama pemain lain secara real-time.</p>
  <div class="v3-controls">
   <span></span><button onpointerdown="v3StartMove('up')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">⬆️</button><span></span>
   <button onpointerdown="v3StartMove('left')" onpointerup="v3StopMove()" onpointerleave="v3StopMove()">⬅️</button>
@@ -2388,13 +1706,8 @@ v3UI.innerHTML = `
 `;
 $("section-home").appendChild(v3UI);
 
-// 3. MOVEMENT SYSTEM
-
 function v3StartMove(direction){
- if(state.working){
-  notify("You cannot walk while working!");
-  return;
- }
+ if(state.working)return;
  v3Direction=direction;
  v3Moving=true;
  if(!v3Animation)v3Animation=requestAnimationFrame(v3MoveLoop);
@@ -2410,17 +1723,14 @@ function v3MoveLoop(timestamp){
   v3Animation=null;
   return;
  }
-
  if(timestamp-v3LastMove>45){
   const speed=5;
   if(v3Direction==="up")state.playerY-=speed;
   if(v3Direction==="down")state.playerY+=speed;
   if(v3Direction==="left")state.playerX-=speed;
   if(v3Direction==="right")state.playerX+=speed;
-
   state.playerX=clamp(state.playerX,25,695);
   state.playerY=clamp(state.playerY,180,350);
-
   v3LastMove=timestamp;
   drawWorld();
   v3UpdatePosition();
@@ -2447,7 +1757,6 @@ document.addEventListener("keyup",e=>{
 function v3UpdatePosition(){
  let nearest="City Street";
  let distance=Infinity;
-
  Object.entries(V3_PLACES).forEach(([id,p])=>{
   const d=Math.hypot(state.playerX-p.x,state.playerY-p.y);
   if(d<distance){
@@ -2456,16 +1765,12 @@ function v3UpdatePosition(){
    state.currentPlace=id;
   }
  });
-
  $("v3Position").textContent="Location: "+nearest;
 }
-
-// 4. INTERAKSI LOKASI
 
 function v3Interact(){
  let nearest=null;
  let distance=Infinity;
-
  Object.entries(V3_PLACES).forEach(([id,p])=>{
   const d=Math.hypot(state.playerX-p.x,state.playerY-p.y);
   if(d<65&&d<distance){
@@ -2473,42 +1778,29 @@ function v3Interact(){
    distance=d;
   }
  });
-
  if(!nearest){
   notify("Tidak ada tempat menarik di dekatmu.");
   return;
  }
-
  state.currentPlace=nearest.id;
-
  if(!state.visitedPlaces.includes(nearest.id)){
   state.visitedPlaces.push(nearest.id);
   addXP(10);
  }
-
  notify("📍 Kamu berada di "+nearest.name);
  log("Visited "+nearest.name);
  v3UpdatePosition();
  saveGame();
 }
 
-// 5. AKTIVITAS KEHIDUPAN
-
 function v3Activity(id){
  const activity=V3_ACTIVITIES.find(a=>a.id===id);
- if(!activity)return;
-
- if(state.working){
-  notify("Selesaikan shift kerja terlebih dahulu.");
-  return;
- }
-
+ if(!activity||state.working)return;
  const place=activity.place;
  if(place!=="city"&&state.currentPlace!==place){
   notify("Kamu harus berada di "+(V3_PLACES[place]?.name||place)+"!");
   return;
  }
-
  switch(id){
   case "bath":
    state.hygiene=100;
@@ -2516,54 +1808,43 @@ function v3Activity(id){
    state.happiness=clamp(state.happiness+5);
    advanceTime(20);
    break;
-
   case "cook":
    if(!spend(7000,"Cooking ingredients"))return;
    state.hunger=clamp(state.hunger+55);
    state.skills.cooking++;
    advanceTime(40);
    break;
-
   case "exercise":
-   if(state.energy<20){
-    notify("Energi terlalu rendah untuk olahraga.");
-    return;
-   }
+   if(state.energy<20)return;
    state.energy-=20;
    state.health=clamp(state.health+8);
    state.happiness=clamp(state.happiness+8);
    advanceTime(45);
    break;
-
   case "watch":
    state.happiness=clamp(state.happiness+18);
    state.energy=clamp(state.energy-4);
    advanceTime(60);
    break;
-
   case "read":
    state.intelligence++;
    state.skills.intelligence++;
    addXP(20);
    advanceTime(45);
    break;
-
   case "social":
    state.social=clamp(state.social+10);
    state.happiness=clamp(state.happiness+8);
    advanceTime(30);
    break;
-
   case "shop":
    navigate("shop",document.querySelectorAll(".nav button")[3]);
    return;
-
   case "study":
    navigate("skills",document.querySelectorAll(".nav button")[2]);
    studyAtHome();
    return;
  }
-
  log("Completed activity: "+activity.name);
  notify("✅ "+activity.name+" completed!");
  renderAll();
@@ -2583,23 +1864,11 @@ function v3RenderActivities(){
  `).join("");
 }
 
-// 6. NPC DAN HUBUNGAN SOSIAL
-
 function v3Talk(id){
  const npc=V3_NPCS.find(n=>n.id===id);
- if(!npc)return;
-
- if(state.working){
-  notify("Kamu sedang bekerja.");
-  return;
- }
-
+ if(!npc||state.working)return;
  const cost=5000;
- if(state.money<cost){
-  notify("Butuh Rp5.000 untuk membeli minuman saat mengobrol.");
-  return;
- }
-
+ if(state.money<cost)return;
  spend(cost,"Social meeting");
  npc.friend=Math.min(100,(npc.friend||0)+15);
  state.relationship[id]=npc.friend;
@@ -2607,7 +1876,6 @@ function v3Talk(id){
  state.happiness=clamp(state.happiness+10);
  state.reputation=clamp(state.reputation+1,0,100);
  advanceTime(20);
-
  log("Talked with "+npc.name);
  notify("🤝 Hubungan dengan "+npc.name+" meningkat!");
  renderAll();
@@ -2631,8 +1899,6 @@ function v3RenderNPCs(){
  }).join("");
 }
 
-// 7. SMARTPHONE
-
 function v3OpenPhone(){
  $("modalContent").innerHTML=`
   <h3>📱 NEON PHONE</h3>
@@ -2651,18 +1917,9 @@ function v3OpenPhone(){
 }
 
 function v3PhoneApp(app){
- if(app==="bank"){
-  closeModal();
-  navigate("bank",document.querySelectorAll(".nav button")[6]);
- }
- if(app==="profile"){
-  closeModal();
-  navigate("profile",document.querySelectorAll(".nav button")[7]);
- }
- if(app==="jobs"){
-  closeModal();
-  navigate("career",document.querySelectorAll(".nav button")[1]);
- }
+ if(app==="bank"){ closeModal(); navigate("bank",document.querySelectorAll(".nav button")[6]); }
+ if(app==="profile"){ closeModal(); navigate("profile",document.querySelectorAll(".nav button")[7]); }
+ if(app==="jobs"){ closeModal(); navigate("career",document.querySelectorAll(".nav button")[1]); }
  if(app==="map"){
   $("modalContent").innerHTML=`
    <h3>🗺️ CITY MAP</h3>
@@ -2681,17 +1938,13 @@ function v3PhoneApp(app){
    <h3>📅 LIFE CALENDAR</h3>
    <p>Day ${state.day} • ${MONTHS[(state.month-1)%12]} ${state.year}</p>
    <p>Current time: ${formatClock()}</p>
-   <p>Age: ${state.age}</p>
-   <p>Work shifts completed: ${state.totalWork}</p>
    <button class="action" onclick="v3OpenPhone()">BACK</button>
   `;
  }
  if(app==="news"){
   $("modalContent").innerHTML=`
    <h3>📰 NEON CITY NEWS</h3>
-   <div class="list-item"><div class="list-info"><b>City Update</b><p class="muted">The city is growing. New opportunities are waiting for you.</p></div></div>
-   <div class="list-item"><div class="list-info"><b>Economy</b><p class="muted">Local businesses continue to serve residents.</p></div></div>
-   <div class="list-item"><div class="list-info"><b>Community</b><p class="muted">Meet people and build relationships around town.</p></div></div>
+   <div class="list-item"><div class="list-info"><b>City Update</b><p class="muted">Multiplayer mode is active. Explore the city with others!</p></div></div>
    <button class="action" onclick="v3OpenPhone()">BACK</button>
   `;
  }
@@ -2700,16 +1953,12 @@ function v3PhoneApp(app){
 function v3TravelTo(id){
  const p=V3_PLACES[id];
  if(!p)return;
-
  const distance=Math.hypot(state.playerX-p.x,state.playerY-p.y);
  const cost=Math.ceil(distance/100)*1000;
-
  if(cost>0&&!spend(cost,"City transportation"))return;
-
  state.playerX=p.x;
  state.playerY=p.y;
  state.currentPlace=id;
-
  advanceTime(Math.max(5,Math.ceil(distance/10)));
  closeModal();
  v3UpdatePosition();
@@ -2718,33 +1967,24 @@ function v3TravelTo(id){
  saveGame();
 }
 
-// 8. MONTHLY BILLS
-
 const v3OriginalNewDay=newDay;
-
 newDay=function(){
  v3OriginalNewDay();
-
  state.hygiene=clamp(state.hygiene-3);
  state.social=clamp(state.social-1);
  state.daysWithoutBath++;
-
  if(state.day%30===1){
   const bills=25000+getHouse().rent;
   state.monthlyBills=bills;
-
   if(state.money>=bills){
    spend(bills,"Monthly electricity and water bills");
    notify("🧾 Monthly bills paid: "+money(bills));
   }else{
    state.happiness=clamp(state.happiness-8);
-   log("Monthly bills are overdue.");
    notify("⚠️ You have unpaid monthly bills!");
   }
  }
 };
-
-// 9. KONDISI KARAKTER BARU
 
 function v3RenderNeeds(){
  const needs=[
@@ -2752,7 +1992,6 @@ function v3RenderNeeds(){
   {name:"Social",value:state.social,icon:"🤝"},
   {name:"Reputation",value:state.reputation,icon:"⭐"}
  ];
-
  $("v3Needs").innerHTML=needs.map(n=>`
   <div style="margin:12px 0">
    <div style="display:flex;justify-content:space-between;font-size:10px">
@@ -2766,21 +2005,15 @@ function v3RenderNeeds(){
  `;
 }
 
-// 10. DUNIA KOTA BARU
-
-const v3OriginalDrawWorld=drawWorld;
-
 drawWorld=function(){
  const w=canvas.width,h=canvas.height;
  ctx.clearRect(0,0,w,h);
-
  const gradient=ctx.createLinearGradient(0,0,0,h);
  gradient.addColorStop(0,"#172b43");
  gradient.addColorStop(1,"#315b57");
  ctx.fillStyle=gradient;
  ctx.fillRect(0,0,w,h);
 
- // City blocks
  const buildings=[
   [20,45,110,130,"🏢"],[155,35,100,140,"🏬"],
   [285,45,110,125,"🏦"],[425,35,110,140,"☕"],
@@ -2794,49 +2027,36 @@ drawWorld=function(){
   ctx.font="25px Arial";
   ctx.textAlign="center";
   ctx.fillText(b[4],b[0]+b[2]/2,b[1]+55);
-
-  for(let x=b[0]+12;x<b[0]+b[2]-10;x+=23){
-   for(let y=b[1]+75;y<b[1]+b[3]-10;y+=23){
-    ctx.fillStyle=(x+y)%2?"#f7d98a":"#68c9e6";
-    ctx.fillRect(x,y,10,12);
-   }
-  }
  });
 
- // Park
  ctx.fillStyle="#275b43";
  ctx.fillRect(270,185,180,105);
- for(let i=0;i<6;i++){
-  const x=285+i*29;
-  ctx.fillStyle="#175b42";
-  ctx.beginPath();
-  ctx.arc(x,220+(i%2)*25,15,0,Math.PI*2);
-  ctx.fill();
-  ctx.fillStyle="#765b3d";
-  ctx.fillRect(x-3,230+(i%2)*25,6,18);
- }
 
- // Roads
  ctx.fillStyle="#293747";
  ctx.fillRect(0,290,w,80);
  ctx.fillRect(0,175,w,20);
- ctx.fillStyle="#e8d58b";
- ctx.setLineDash([22,18]);
- ctx.lineWidth=3;
- ctx.beginPath();
- ctx.moveTo(0,330);
- ctx.lineTo(w,330);
- ctx.stroke();
- ctx.setLineDash([]);
 
- // NPCs
  V3_NPCS.forEach(n=>{
   ctx.font="19px Arial";
   ctx.textAlign="center";
   ctx.fillText(n.emoji,n.x,n.y);
  });
 
- // Player
+ // RENDER PEMAIN LAIN SECARA MULTIPLAYER
+ for(let id in onlinePlayers){
+  let p = onlinePlayers[id];
+  ctx.fillStyle="#ff647d";
+  ctx.beginPath();
+  ctx.arc(p.x, p.y-12, 8, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#ffc65c";
+  ctx.font="bold 10px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(p.name || "Player", p.x, p.y-26);
+ }
+
+ // RENDER PLAYER LOKAL
  ctx.fillStyle="#f1c29c";
  ctx.beginPath();
  ctx.arc(state.playerX,state.playerY-12,8,0,Math.PI*2);
@@ -2845,10 +2065,6 @@ drawWorld=function(){
  ctx.fillStyle="#36d9ff";
  ctx.fillRect(state.playerX-8,state.playerY-4,16,18);
 
- ctx.fillStyle="#172b43";
- ctx.fillRect(state.playerX-7,state.playerY+14,5,9);
- ctx.fillRect(state.playerX+2,state.playerY+14,5,9);
-
  ctx.fillStyle="white";
  ctx.font="bold 12px Arial";
  ctx.textAlign="center";
@@ -2856,16 +2072,10 @@ drawWorld=function(){
 
  ctx.textAlign="left";
  ctx.font="bold 17px Arial";
- ctx.fillText("NEON CITY",15,25);
- ctx.font="10px Arial";
- ctx.fillStyle="#c0d9ed";
- ctx.fillText("EXPLORE • WORK • LIVE",15,40);
+ ctx.fillText("NEON CITY (ONLINE)",15,25);
 };
 
-// 11. RENDER HOOKS
-
 const v3OriginalRenderAll=renderAll;
-
 renderAll=function(){
  v3OriginalRenderAll();
  v3RenderActivities();
@@ -2874,45 +2084,62 @@ renderAll=function(){
  v3UpdatePosition();
 };
 
-// 12. SAVE TAMBAHAN
+function escapeText(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 
-const v3OriginalSave=saveGame;
+function getRank(){
+ const n=getNetWorth();
+ if(n>=10000000000)return "MEGA BILLIONAIRE";
+ if(n>=1000000000)return "BILLIONAIRE";
+ if(n>=500000000)return "BUSINESS TYCOON";
+ if(n>=100000000)return "MILLIONAIRE";
+ if(n>=10000000)return "WEALTHY CITIZEN";
+ if(n>=1000000)return "ENTREPRENEUR";
+ if(n>=500000)return "PROFESSIONAL";
+ return "BEGINNER";
+}
 
-saveGame=function(){
- v3OriginalSave();
-};
+function openSettings(){
+ $("modalContent").innerHTML=`
+  <h3>⚙️ GAME SETTINGS</h3>
+  <p>Manage your progress and game data.</p>
+  <button class="action green" onclick="saveGame();notify('Game saved!');closeModal()">SAVE GAME</button>
+  <button class="action gray" onclick="exportGame()">EXPORT SAVE FILE</button>
+  <button class="action gray" onclick="$('importFile').click()">IMPORT SAVE FILE</button>
+  <input id="importFile" type="file" accept=".json" style="display:none" onchange="importGame(event)">
+  <button class="action red" onclick="resetGame()">RESET ALL PROGRESS</button>
+  <button class="action" onclick="closeModal()">CLOSE</button>
+ `;
+ $("modal").style.display="flex";
+}
 
-// 13. ACHIEVEMENT TAMBAHAN
+function closeModal(){
+ $("modal").style.display="none";
+}
 
-ACHIEVEMENTS.push(
- {id:"explorer",name:"City Explorer",desc:"Visit five different places.",check:()=>state.visitedPlaces.length>=5},
- {id:"socialstar",name:"Social Star",desc:"Reach 100 social points.",check:()=>state.social>=100},
- {id:"cleanlife",name:"Fresh Start",desc:"Maintain 100 hygiene.",check:()=>state.hygiene>=100}
-);
-
-// 14. KEYBOARD CLEANUP
-
-window.addEventListener("blur",v3StopMove);
-
-console.log("NEON LIFE V3 loaded successfully.");
-
-
+function resetGame(){
+ if(!confirm("Delete all game progress?"))return;
+ localStorage.removeItem(CONFIG.SAVE_KEY);
+ state=createDefaultState();
+ saveGame();
+ closeModal();
+ renderAll();
+ notify("New life started!");
+}
 
 function initializeGame(){
  log("Welcome to Neon Life!");
  renderAll();
  saveGame();
-
  tickHandle=setInterval(clockTick,1000);
-
  setInterval(saveGame,10000);
-
  window.addEventListener("beforeunload",saveGame);
 }
 
 initializeGame();
-
 </script>
+
 <style>
 #homeButton {
   position: fixed;
@@ -2933,34 +2160,20 @@ initializeGame();
 }
 </style>
 
-<button id="homeButton" onclick="returnToHome()">
-  🏠 HOME
-</button>
+<button id="homeButton" onclick="returnToHome()">🏠 HOME</button>
 
 <script>
 function returnToHome() {
-  // Tutup semua panel atau halaman yang sedang terbuka
-  if (typeof navigateByName === "function") {
-    navigateByName("home");
-  }
-
-  // Kembalikan tampilan ke dashboard
-  if (typeof renderAll === "function") {
-    renderAll();
-  }
-
-  // Kembalikan posisi scroll ke atas
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  navigateByName("home");
+  renderAll();
+  window.scrollTo({top: 0, behavior: "smooth"});
 }
 </script>
-<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
+<!-- SOCKET.IO UNTUK FITUR MULTIPLAYER -->
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 <script>
 const socket = io("https://neon-life-simulator.onrender.com");
-
 let onlinePlayers = {};
 
 socket.on("connect", () => {
@@ -2985,7 +2198,6 @@ socket.on("playerLeft", id => {
 
 function syncOnlinePlayer() {
   if (!socket.connected) return;
-
   socket.emit("updatePlayer", {
     name: state.name,
     x: state.playerX || 350,
@@ -2996,6 +2208,6 @@ function syncOnlinePlayer() {
 
 setInterval(syncOnlinePlayer, 100);
 </script>
+
 </body>
 </html>
-
